@@ -12,7 +12,7 @@ Initial release.
 
 ### Added
 
-- **MCP server** (FastMCP, stdio + optional streamable-HTTP) with 18 tools.
+- **MCP server** (FastMCP, stdio + optional streamable-HTTP) with 19 tools.
 - **Real-time data:** background `ccxt.pro` WebSocket ingestion with reconnect,
   auto-watch on first query, and `source` / `age_ms` / `timestamp` freshness on
   every market-data response.
@@ -27,10 +27,20 @@ Initial release.
   spread).
 - **Structure recognition:** `detect_patterns` (candlestick patterns),
   `analyze_structure` (HH/HL/LH/LL, trend, BOS/CHoCH), `find_support_resistance`.
+- **Deep analysis:** `deep_analyze` — multi-timeframe trend confluence,
+  statistical & market-state context (price percentile, ADX/efficiency trend
+  state, ATR volatility state), and a strictly causal historical-signal event
+  study, synthesized into a verdict. `compute_indicators` carries the
+  market-state context inline.
 - **Resources:** `tickfeed://status`, `tickfeed://watched`,
   `tickfeed://ticker/{exchange}/{symbol}`.
+- **Prompts:** `/deep_analyze` slash command (MCP prompt) for an on-demand,
+  guided multi-timeframe read.
 - **Resilience:** rate-limit-aware exponential backoff on REST, structured error
   envelopes, bounded concurrency for multi-symbol work.
+- **Performance:** DuckDB and pandas work runs off the event loop
+  (`asyncio.to_thread`), an in-memory L1 OHLCV cache, a per-exchange REST
+  concurrency gate, and a single bulk `fetch_tickers` for screening.
 - Packaging for `uvx tickfeed-mcp`; unit + MCP-integration + live test suites;
   `ruff` + `mypy` CI gates; multi-language READMEs (EN/KO/ZH/JA).
 
