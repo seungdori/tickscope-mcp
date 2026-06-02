@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tickfeed-mcp"
+version = "0.1.0"
+description = "Real-time, free crypto market data for any AI coding agent — via MCP."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "TickFeed" }]
+keywords = [
+    "mcp", "model-context-protocol", "crypto", "cryptocurrency", "trading",
+    "ccxt", "market-data", "websocket", "technical-analysis", "indicators",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Typing :: Typed",
+]
+dependencies = [
+    "mcp>=1.2.0",
+    "ccxt>=4.4.0",
+    "pandas>=2.1.0",
+    "numpy>=1.26.0",
+    "duckdb>=1.0.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+]
+
+[project.optional-dependencies]
+speed = ["uvloop>=0.19.0; sys_platform != 'win32'"]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+    "mypy>=1.9.0",
+]
+
+[project.scripts]
+tickfeed = "tickfeed.__main__:main"
+tickfeed-mcp = "tickfeed.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/seungdori/tickfeed-mcp"
+Repository = "https://github.com/seungdori/tickfeed-mcp"
+Documentation = "https://github.com/seungdori/tickfeed-mcp#readme"
+Issues = "https://github.com/seungdori/tickfeed-mcp/issues"
+Changelog = "https://github.com/seungdori/tickfeed-mcp/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tickfeed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM", "C4", "PIE", "RET", "PERF", "RUF", "BLE"]
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+ignore_missing_imports = true
+packages = ["tickfeed"]
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "live: tests that hit real exchanges (excluded from CI by default)",
+]
+testpaths = ["tests"]

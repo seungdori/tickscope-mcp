@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a problem with TickFeed MCP
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for filing a bug! Please fill in the details below.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including the tool/indicator involved.
+      placeholder: e.g. `compute_indicators` with `stochrsi` returns null on 1m candles…
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: The exact tool call / prompt / command, and the response or error.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: exchange
+    attributes:
+      label: Exchange / symbol / timeframe
+      placeholder: binance · BTC/USDT · 1h
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: TickFeed version, Python version, OS, and MCP client.
+      placeholder: |
+        tickfeed-mcp: 0.1.0
+        python: 3.12
+        os: macOS 14
+        client: Claude Code
+    validations:
+      required: true

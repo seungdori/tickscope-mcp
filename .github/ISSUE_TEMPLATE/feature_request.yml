@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest an indicator, tool, exchange, or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's missing?
+      description: The use case or gap. For an indicator, link a canonical/TradingView reference.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What the tool/indicator should return, and any parameters.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This stays read-only / public-data (no orders, balances, or API secrets).
+          required: true
