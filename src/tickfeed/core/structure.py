@@ -14,7 +14,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from .analysis import _pivot_indices
+from .analysis import pivot_indices
 
 # --- candlestick patterns -----------------------------------------------------
 
@@ -179,9 +179,9 @@ def market_structure(df: pd.DataFrame, left: int = 3, right: int = 3) -> dict[st
     n = len(close)
 
     raw: list[tuple[int, str, float]] = [
-        (i, "high", high[i]) for i in _pivot_indices(high, left, right, high=True)
+        (i, "high", high[i]) for i in pivot_indices(high, left, right, high=True)
     ]
-    raw += [(i, "low", low[i]) for i in _pivot_indices(low, left, right, high=False)]
+    raw += [(i, "low", low[i]) for i in pivot_indices(low, left, right, high=False)]
     raw.sort(key=lambda x: x[0])
 
     # Collapse consecutive same-type pivots into the more extreme one (zigzag).
@@ -277,8 +277,8 @@ def support_resistance(
     high = window["high"].to_numpy(dtype=float)
     low = window["low"].to_numpy(dtype=float)
 
-    levels: list[float] = [high[i] for i in _pivot_indices(high, left, right, high=True)]
-    levels += [low[i] for i in _pivot_indices(low, left, right, high=False)]
+    levels: list[float] = [high[i] for i in pivot_indices(high, left, right, high=True)]
+    levels += [low[i] for i in pivot_indices(low, left, right, high=False)]
     levels.sort()
 
     clusters: list[dict[str, Any]] = []

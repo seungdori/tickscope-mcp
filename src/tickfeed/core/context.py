@@ -49,7 +49,7 @@ def _trend_state(
     Also returns Kaufman's efficiency ratio (0..1; high = directional, low =
     choppy) as a second, smoothing-free read on how "trending" the tape is.
     """
-    adx_val = ie._last(ie.adx(df, adx_period))
+    adx_val = ie.last(ie.adx(df, adx_period))
 
     er: float | None = None
     if close.size > er_period:
@@ -64,8 +64,8 @@ def _trend_state(
         state = "ranging"
     else:
         dmi = ie.dmi(df, adx_period)
-        plus = ie._last(dmi["plus_di"])
-        minus = ie._last(dmi["minus_di"])
+        plus = ie.last(dmi["plus_di"])
+        minus = ie.last(dmi["minus_di"])
         if plus is not None and minus is not None:
             state = "trending_up" if plus >= minus else "trending_down"
         else:

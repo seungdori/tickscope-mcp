@@ -18,7 +18,7 @@ import pandas as pd
 from . import indicators_engine as ie
 
 
-def _pivot_indices(values: np.ndarray, left: int, right: int, *, high: bool) -> list[int]:
+def pivot_indices(values: np.ndarray, left: int, right: int, *, high: bool) -> list[int]:
     """Indices of confirmed pivots (unique strict extrema in the window).
 
     The center bar must be strictly greater (for a pivot high) or strictly less
@@ -71,7 +71,7 @@ def detect_divergence(
     def _bars_ago(idx: int) -> int:
         return n - 1 - idx
 
-    highs = _pivot_indices(high, left, right, high=True)
+    highs = pivot_indices(high, left, right, high=True)
     if len(highs) >= 2:
         p1, p2 = highs[-2], highs[-1]
         ph1, ph2 = high[p1], high[p2]
@@ -82,7 +82,7 @@ def detect_divergence(
             elif ph2 < ph1 and oh2 > oh1:
                 found.append(_div("bearish", "hidden", p1, p2, ph1, ph2, oh1, oh2, _bars_ago))
 
-    lows = _pivot_indices(low, left, right, high=False)
+    lows = pivot_indices(low, left, right, high=False)
     if len(lows) >= 2:
         p1, p2 = lows[-2], lows[-1]
         pl1, pl2 = low[p1], low[p2]
@@ -126,8 +126,8 @@ def evaluate_cross(df: pd.DataFrame, series_a: str, series_b: str) -> dict[str, 
     """Pine-style crossover analysis between two resolvable series."""
     a = ie.series_for(df, series_a)
     b = ie.series_for(df, series_b)
-    last_a = ie._last(a)
-    last_b = ie._last(b)
+    last_a = ie.last(a)
+    last_b = ie.last(b)
     relation = "unknown"
     if last_a is not None and last_b is not None:
         relation = "a_above_b" if last_a > last_b else "a_below_b" if last_a < last_b else "equal"

@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 from . import indicators_engine as ie
-from .analysis import _pivot_indices
+from .analysis import pivot_indices
 
 
 def _forward_stats(close: np.ndarray, indices: list[int], horizon: int) -> dict[str, Any]:
@@ -71,7 +71,7 @@ def divergence_performance(
     close = df["close"].to_numpy(dtype=float)
 
     bullish_idx: list[int] = []
-    lows = _pivot_indices(low, left, right, high=False)
+    lows = pivot_indices(low, left, right, high=False)
     for p1, p2 in pairwise(lows):
         if np.isnan(osc[p1]) or np.isnan(osc[p2]):
             continue
@@ -79,7 +79,7 @@ def divergence_performance(
             bullish_idx.append(p2 + right)  # actionable only once confirmed
 
     bearish_idx: list[int] = []
-    highs = _pivot_indices(high, left, right, high=True)
+    highs = pivot_indices(high, left, right, high=True)
     for p1, p2 in pairwise(highs):
         if np.isnan(osc[p1]) or np.isnan(osc[p2]):
             continue

@@ -1099,6 +1099,13 @@ def _last(series: pd.Series) -> float | None:
     return round(float(series.iloc[-1]), 6)
 
 
+# Public aliases — these primitives are shared by sibling core modules
+# (analysis, context, service); expose stable public names so callers don't
+# reach for the underscored internals used throughout this module.
+last = _last
+spec_key = _key
+
+
 def _rsi_state(value: float | None) -> str:
     if value is None:
         return "unknown"

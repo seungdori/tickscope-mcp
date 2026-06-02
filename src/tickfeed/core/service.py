@@ -596,7 +596,7 @@ class MarketDataService:
     def _tf_snapshot(df: pd.DataFrame, oscillator: str) -> dict[str, Any]:
         """Per-timeframe read (runs in a worker thread): trend, momentum, context."""
         ms = structure.market_structure(df)
-        rsi_last = indicators_engine._last(indicators_engine.rsi(df["close"], 14))
+        rsi_last = indicators_engine.last(indicators_engine.rsi(df["close"], 14))
         div = analysis.detect_divergence(df, oscillator)
         return {
             "trend": ms["trend"],
@@ -935,7 +935,7 @@ class MarketDataService:
     ) -> float | None:
         if "indicator" in f:
             name, params = indicators_engine.parse_spec(f["indicator"])
-            key = indicators_engine._key(name, params)
+            key = indicators_engine.spec_key(name, params)
             entry = indicators.get(key, {})
             if isinstance(entry, dict):
                 for field in ("value", "macd", "k"):

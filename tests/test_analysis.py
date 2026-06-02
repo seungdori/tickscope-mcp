@@ -41,11 +41,11 @@ def test_detect_divergence_bullish_regular():
 def test_pivot_indices_rejects_ties():
     # Strict-extremum semantics: a value tied within the window is NOT a pivot.
     vals = np.array([1.0, 5.0, 2.0, 5.0, 2.0, 1.0, 0.0])
-    highs = analysis._pivot_indices(vals, 2, 2, high=True)
+    highs = analysis.pivot_indices(vals, 2, 2, high=True)
     assert 3 not in highs  # index 3 (5.0) ties index 1 (5.0) -> not a pivot
     # A clean unique peak is detected.
     clean = np.array([1.0, 2.0, 9.0, 2.0, 1.0])
-    assert analysis._pivot_indices(clean, 2, 2, high=True) == [2]
+    assert analysis.pivot_indices(clean, 2, 2, high=True) == [2]
 
 
 def test_detect_divergence_none_on_trending():
