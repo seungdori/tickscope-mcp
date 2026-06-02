@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tickscope-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Real-time, free crypto market data for any AI coding agent — via MCP."
 readme = "README.md"
 license = { text = "MIT" }

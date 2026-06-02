@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.seungdori/tickscope-mcp -->
+
 <div align="center">
 
 # Tickscope MCP

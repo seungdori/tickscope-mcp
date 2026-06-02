@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-06-02
+
+### Added
+
+- `server.json` and an `mcp-name` marker in the package description so the
+  server can be listed in the official MCP Registry.
+
 ## [0.1.0] — 2026-06-02
 
 Initial release.
@@ -44,5 +51,6 @@ Initial release.
 - Packaging for `uvx tickscope-mcp`; unit + MCP-integration + live test suites;
   `ruff` + `mypy` CI gates; multi-language READMEs (EN/KO/ZH/JA).
 
-[Unreleased]: https://github.com/seungdori/tickscope-mcp/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/seungdori/tickscope-mcp/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/seungdori/tickscope-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/seungdori/tickscope-mcp/releases/tag/v0.1.0
