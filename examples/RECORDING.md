@@ -23,19 +23,26 @@ asciinema rec demo.cast -c "uv run examples/demo.py"
 agg --cols 80 --rows 32 demo.cast docs/demo.gif
 ```
 
-or with [`vhs`](https://github.com/charmbracelet/vhs) for a fully reproducible recording:
+**Recommended:** a ready-made [`vhs`](https://github.com/charmbracelet/vhs) tape
+([`examples/demo.tape`](demo.tape)) renders `docs/demo.gif` in one command — fully
+reproducible, no manual screen recording:
 
 ```bash
-# demo.tape
-Output docs/demo.gif
-Set FontSize 16
-Set Width 1000
-Set Height 700
-Type "uv run examples/demo.py" Enter
-Sleep 20s
+brew install vhs            # uses the ffmpeg you already have
+vhs examples/demo.tape      # -> docs/demo.gif
 ```
+
+Tweak `Width`/`Height`/`FontSize`/`Theme` in the tape to taste, change the
+symbol/timeframe in the `Type` line (e.g. `BTC/USDT 4h`), and bump the final
+`Sleep` if your network warms the websocket slowly.
+
+Optional — trim the brief `uv run` startup beat off the front and re-encode with
+a clean palette:
+
 ```bash
-vhs demo.tape
+ffmpeg -y -ss 2.3 -i docs/demo.gif \
+  -vf "fps=24,scale=1180:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3" \
+  /tmp/demo.gif && mv /tmp/demo.gif docs/demo.gif
 ```
 
 ## Option B — Claude Code answering live (most compelling)

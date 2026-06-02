@@ -6,17 +6,36 @@ range requests hit the cache and avoid redundant exchange calls / rate limits.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
 import duckdb
 
+logger = logging.getLogger("tickfeed.storage")
+
 
 class OHLCVStore:
-    """Thin wrapper around a DuckDB file holding cached candles."""
+    """Thin wrapper around a DuckDB file holding cached candles.
+
+    DuckDB is single-writer: only one process may hold the file's write lock.
+    If the file is already locked (e.g. a second MCP client, or the demo, runs
+    at the same time), we fall back to a private in-memory cache so the server
+    still starts and serves data — it just won't share the on-disk cache.
+    """
 
     def __init__(self, path: Path):
-        self._conn = duckdb.connect(str(path))
+        try:
+            self._conn = duckdb.connect(str(path))
+            self.persistent = True
+        except duckdb.Error as exc:
+            logger.warning(
+                "OHLCV cache file is locked by another process (%s); "
+                "falling back to an in-memory cache for this instance.",
+                exc,
+            )
+            self._conn = duckdb.connect(":memory:")
+            self.persistent = False
         self._init_schema()
 
     def _init_schema(self) -> None:

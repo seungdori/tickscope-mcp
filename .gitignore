@@ -25,9 +25,8 @@ env/
 *.duckdb
 *.duckdb.wal
 
-# Recording artifacts (keep the final docs/demo.gif)
+# Recording artifacts (the committed examples/demo.tape + docs/demo.gif are kept)
 *.cast
-demo.tape
 
 # OS / editor
 .DS_Store

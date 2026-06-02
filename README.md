@@ -14,8 +14,8 @@
 
 **English** · [한국어](README.ko.md) · [中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-<!-- Record this with examples/demo.py — see examples/RECORDING.md -->
-![TickFeed demo](docs/demo.gif)
+<!-- Live Claude Code walkthrough — see examples/RECORDING.md -->
+![TickFeed demo](docs/demo-agent.gif)
 
 </div>
 

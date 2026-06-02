@@ -13,10 +13,14 @@ GIF.
 from __future__ import annotations
 
 import asyncio
+import logging
 import sys
 
 from tickfeed.config import Settings
 from tickfeed.core.service import MarketDataService
+
+# Keep the walkthrough clean (no background WS reconnect chatter) for recording.
+logging.getLogger().setLevel(logging.ERROR)
 
 # Minimal ANSI styling (no dependencies).
 DIM, BOLD, GREEN, CYAN, YELLOW, RESET = (

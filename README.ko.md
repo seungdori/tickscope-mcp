@@ -14,7 +14,7 @@
 
 [English](README.md) · **한국어** · [中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-![TickFeed demo](docs/demo.gif)
+![TickFeed demo](docs/demo-agent.gif)
 
 </div>
 
