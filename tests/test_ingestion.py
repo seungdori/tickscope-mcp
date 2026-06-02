@@ -7,9 +7,9 @@ import asyncio
 import ccxt
 import pytest
 
-from tickfeed.core.cache import MarketCache
-from tickfeed.core.exchange_manager import ExchangeManager
-from tickfeed.core.ingestion import IngestionManager
+from tickscope.core.cache import MarketCache
+from tickscope.core.exchange_manager import ExchangeManager
+from tickscope.core.ingestion import IngestionManager
 
 pytestmark = pytest.mark.asyncio
 
@@ -126,7 +126,7 @@ async def test_watch_loop_reconnects_after_transient_error(monkeypatch):
     async def fast_sleep(_delay=0, *args, **kwargs):
         await real_sleep(0)
 
-    monkeypatch.setattr("tickfeed.core.ingestion.asyncio.sleep", fast_sleep)
+    monkeypatch.setattr("tickscope.core.ingestion.asyncio.sleep", fast_sleep)
 
     fake = WatchFake()
     fake.fail_once = True  # first watch_ticker raises, then it recovers

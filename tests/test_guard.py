@@ -5,8 +5,8 @@ from __future__ import annotations
 import ccxt
 import pytest
 
-from tickfeed.tools._guard import guard
-from tickfeed.utils import TickFeedError
+from tickscope.tools._guard import guard
+from tickscope.utils import TickscopeError
 
 pytestmark = pytest.mark.asyncio
 
@@ -19,7 +19,7 @@ async def test_guard_passes_through_success():
     assert await ok(symbol="BTC/USDT") == {"value": 42}
 
 
-async def test_guard_returns_tickfeed_error_payload_verbatim():
+async def test_guard_returns_tickscope_error_payload_verbatim():
     payload = {
         "error": {
             "type": "NoData",
@@ -32,7 +32,7 @@ async def test_guard_returns_tickfeed_error_payload_verbatim():
 
     @guard()
     async def boom(symbol=None, exchange=None):
-        raise TickFeedError(payload)
+        raise TickscopeError(payload)
 
     out = await boom(symbol="BTC/USDT", exchange="binance")
     assert out == payload  # domain error carries its own structured payload

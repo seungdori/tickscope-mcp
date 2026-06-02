@@ -1,4 +1,4 @@
-"""Console entrypoint: ``tickfeed`` / ``uvx tickfeed-mcp``."""
+"""Console entrypoint: ``tickscope`` / ``uvx tickscope-mcp``."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from .server import build_server
 
 
 def main() -> None:
-    """Run the TickFeed MCP server using the configured transport."""
+    """Run the Tickscope MCP server using the configured transport."""
     try:
         import uvloop
 

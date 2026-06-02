@@ -16,7 +16,7 @@ from typing import Any
 from .cache import MarketCache
 from .exchange_manager import ExchangeManager
 
-logger = logging.getLogger("tickfeed.ingestion")
+logger = logging.getLogger("tickscope.ingestion")
 
 DEFAULT_CHANNELS = ("ticker", "trades")
 _BACKOFF_CAP_S = 30.0

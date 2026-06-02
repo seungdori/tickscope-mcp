@@ -32,8 +32,8 @@ Initial release.
   state, ATR volatility state), and a strictly causal historical-signal event
   study, synthesized into a verdict. `compute_indicators` carries the
   market-state context inline.
-- **Resources:** `tickfeed://status`, `tickfeed://watched`,
-  `tickfeed://ticker/{exchange}/{symbol}`.
+- **Resources:** `tickscope://status`, `tickscope://watched`,
+  `tickscope://ticker/{exchange}/{symbol}`.
 - **Prompts:** `/deep_analyze` slash command (MCP prompt) for an on-demand,
   guided multi-timeframe read.
 - **Resilience:** rate-limit-aware exponential backoff on REST, structured error
@@ -41,8 +41,8 @@ Initial release.
 - **Performance:** DuckDB and pandas work runs off the event loop
   (`asyncio.to_thread`), an in-memory L1 OHLCV cache, a per-exchange REST
   concurrency gate, and a single bulk `fetch_tickers` for screening.
-- Packaging for `uvx tickfeed-mcp`; unit + MCP-integration + live test suites;
+- Packaging for `uvx tickscope-mcp`; unit + MCP-integration + live test suites;
   `ruff` + `mypy` CI gates; multi-language READMEs (EN/KO/ZH/JA).
 
-[Unreleased]: https://github.com/seungdori/tickfeed-mcp/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/seungdori/tickfeed-mcp/releases/tag/v0.1.0
+[Unreleased]: https://github.com/seungdori/tickscope-mcp/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/seungdori/tickscope-mcp/releases/tag/v0.1.0

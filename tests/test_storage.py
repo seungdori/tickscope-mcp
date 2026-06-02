@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import duckdb
 
-from tickfeed.core.storage import OHLCVStore
+from tickscope.core.storage import OHLCVStore
 
 
 def test_store_is_persistent_when_file_is_free(tmp_path):

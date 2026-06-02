@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tickfeed.core import context, signal_history
+from tickscope.core import context, signal_history
 
 
 def _df(closes: list[float]) -> pd.DataFrame:

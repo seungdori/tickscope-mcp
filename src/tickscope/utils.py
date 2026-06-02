@@ -23,12 +23,12 @@ _RETRYABLE_TYPES: tuple[type[Exception], ...] = (
 )
 
 
-class TickFeedError(Exception):
+class TickscopeError(Exception):
     """Domain error that already carries a structured, LLM-friendly payload."""
 
     def __init__(self, payload: dict[str, Any]):
         self.payload = payload
-        super().__init__(payload.get("error", {}).get("message", "TickFeed error"))
+        super().__init__(payload.get("error", {}).get("message", "Tickscope error"))
 
 
 def now_iso() -> str:
@@ -97,7 +97,7 @@ def normalize_symbol(symbol: str, markets: dict[str, Any] | None = None) -> str:
 
 def error_payload(exc: Exception, *, exchange: str | None = None, symbol: str | None = None) -> dict[str, Any]:
     """Build the standard structured error envelope from any exception."""
-    if isinstance(exc, TickFeedError):
+    if isinstance(exc, TickscopeError):
         return exc.payload
     retryable = isinstance(exc, _RETRYABLE_TYPES)
     return {

@@ -116,14 +116,14 @@ async def test_ohlcv_l1_cache_skips_store_on_repeat(service, fake_exchange):
 
 
 async def test_screen_market_invalid_op_raises():
-    from tickfeed.core.service import MarketDataService
-    from tickfeed.utils import TickFeedError
+    from tickscope.core.service import MarketDataService
+    from tickscope.utils import TickscopeError
 
-    with pytest.raises(TickFeedError):
+    with pytest.raises(TickscopeError):
         MarketDataService._validate_filters([{"indicator": "rsi:14", "op": "<<", "value": 30}])
-    with pytest.raises(TickFeedError):
+    with pytest.raises(TickscopeError):
         MarketDataService._validate_filters([{"op": "<", "value": 30}])  # no indicator/metric
-    with pytest.raises(TickFeedError):
+    with pytest.raises(TickscopeError):
         MarketDataService._validate_filters([])  # empty
 
 

@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a problem with TickFeed MCP
+description: Report a problem with Tickscope MCP
 labels: ["bug"]
 body:
   - type: markdown
@@ -30,9 +30,9 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: TickFeed version, Python version, OS, and MCP client.
+      description: Tickscope version, Python version, OS, and MCP client.
       placeholder: |
-        tickfeed-mcp: 0.1.0
+        tickscope-mcp: 0.1.0
         python: 3.12
         os: macOS 14
         client: Claude Code

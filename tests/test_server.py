@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from tickfeed import runtime, server
-from tickfeed.utils import DISCLAIMER
+from tickscope import runtime, server
+from tickscope.utils import DISCLAIMER
 
 # asyncio_mode = "auto" (pyproject) runs async tests automatically; no mark needed.
 

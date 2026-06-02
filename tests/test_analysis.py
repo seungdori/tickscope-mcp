@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tickfeed.core import analysis
-from tickfeed.core.retry import with_retry
+from tickscope.core import analysis
+from tickscope.core.retry import with_retry
 
 # asyncio_mode = "auto" (pyproject) runs async tests automatically; no mark needed.
 
@@ -109,7 +109,7 @@ async def test_funding_uses_next_timestamp(service, fake_exchange):
     now_ms = int(__import__("time").time() * 1000)
     # next_funding_time should be ~8h in the future (nextFundingTimestamp),
     # not the current fundingTimestamp.
-    from tickfeed.utils import iso_or_ms_to_ms
+    from tickscope.utils import iso_or_ms_to_ms
 
     next_ms = iso_or_ms_to_ms(out["next_funding_time"])
     assert next_ms is not None and next_ms > now_ms + 3_600_000
@@ -118,7 +118,7 @@ async def test_funding_uses_next_timestamp(service, fake_exchange):
 async def test_ohlcv_live_candle_overlay(service):
     base = await service.get_ohlcv("binance", "BTC/USDT", "1h", 50)
     last_ts_iso = base["candles"][-1]["ts"]
-    from tickfeed.utils import iso_or_ms_to_ms
+    from tickscope.utils import iso_or_ms_to_ms
 
     last_ts = iso_or_ms_to_ms(last_ts_iso)
     # Inject a forming candle that updates the most recent bar's close.
@@ -132,7 +132,7 @@ async def test_ohlcv_live_candle_overlay(service):
 
 async def test_ohlcv_live_overlay_append_respects_limit(service):
     base = await service.get_ohlcv("binance", "BTC/USDT", "1h", 50)
-    from tickfeed.utils import iso_or_ms_to_ms
+    from tickscope.utils import iso_or_ms_to_ms
 
     last_ts = iso_or_ms_to_ms(base["candles"][-1]["ts"])
     # A forming candle exactly one timeframe ahead -> appended, but trimmed.
@@ -146,7 +146,7 @@ async def test_ohlcv_live_overlay_append_respects_limit(service):
 
 async def test_ohlcv_live_overlay_drops_gapped_candle(service):
     base = await service.get_ohlcv("binance", "BTC/USDT", "1h", 50)
-    from tickfeed.utils import iso_or_ms_to_ms
+    from tickscope.utils import iso_or_ms_to_ms
 
     last_ts = iso_or_ms_to_ms(base["candles"][-1]["ts"])
     # A forming candle several periods ahead (a gap) must be dropped, not stitched.

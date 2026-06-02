@@ -16,7 +16,7 @@ Set TypingSpeed 1ms
 
 # Near-instant command (tight front), then let the live walkthrough play out.
 Sleep 400ms
-Type "TICKFEED_LOG_LEVEL=ERROR uv run examples/demo.py BTC/USDT 4h"
+Type "TICKSCOPE_LOG_LEVEL=ERROR uv run examples/demo.py BTC/USDT 4h"
 Sleep 300ms
 Enter
 

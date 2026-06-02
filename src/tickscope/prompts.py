@@ -2,7 +2,7 @@
 
 Prompts are the *user-controlled* MCP primitive (tools are model-controlled,
 resources are addressable data). In clients like Claude Code they surface as
-slash commands (e.g. ``/mcp__tickfeed__deep_analyze``), letting a user
+slash commands (e.g. ``/mcp__tickscope__deep_analyze``), letting a user
 explicitly trigger a heavier, structured analysis instead of relying on the
 agent to infer which tools to chain.
 """
@@ -20,7 +20,7 @@ def register(mcp: FastMCP) -> None:
     def deep_analyze(symbol: str, timeframe: str = "4h") -> str:
         """Drive a full, evidence-backed read of ``symbol`` via the deep_analyze tool."""
         return (
-            f"Use the TickFeed `deep_analyze` tool on {symbol} with the execution "
+            f"Use the Tickscope `deep_analyze` tool on {symbol} with the execution "
             f"timeframe {timeframe} (let it read its default higher-timeframe ladder "
             "for context). Then give a concise read:\n"
             "1. Multi-timeframe trend alignment — do the timeframes agree or conflict?\n"

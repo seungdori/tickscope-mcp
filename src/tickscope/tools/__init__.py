@@ -8,7 +8,7 @@ from . import analysis, deep, indicators, market, meta, screen, watch
 
 
 def register_all(mcp: FastMCP) -> None:
-    """Register every TickFeed tool onto the FastMCP app."""
+    """Register every Tickscope tool onto the FastMCP app."""
     meta.register(mcp)
     market.register(mcp)
     indicators.register(mcp)

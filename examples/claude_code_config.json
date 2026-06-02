@@ -1,11 +1,11 @@
 {
   "mcpServers": {
-    "tickfeed": {
+    "tickscope": {
       "command": "uvx",
-      "args": ["tickfeed-mcp"],
+      "args": ["tickscope-mcp"],
       "env": {
-        "TICKFEED_EXCHANGES": "binance,bybit,okx",
-        "TICKFEED_DEFAULT_EXCHANGE": "binance"
+        "TICKSCOPE_EXCHANGES": "binance,bybit,okx",
+        "TICKSCOPE_DEFAULT_EXCHANGE": "binance"
       }
     }
   }

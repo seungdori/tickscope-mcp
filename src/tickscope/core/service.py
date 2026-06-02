@@ -17,7 +17,7 @@ import pandas as pd
 from ..config import Settings
 from ..utils import (
     DISCLAIMER,
-    TickFeedError,
+    TickscopeError,
     age_ms,
     iso_or_ms_to_ms,
     ms_to_iso,
@@ -131,7 +131,7 @@ class MarketDataService:
     async def _normalize(self, exchange: str, symbol: str) -> str:
         try:
             markets = await self.exchanges.load_markets(exchange)
-        except TickFeedError:
+        except TickscopeError:
             markets = None
         return normalize_symbol(symbol, markets)
 
@@ -422,7 +422,7 @@ class MarketDataService:
     ) -> pd.DataFrame:
         rows, _ = await self._ohlcv_rows(exchange, symbol, timeframe, limit)
         if not rows:
-            raise TickFeedError(
+            raise TickscopeError(
                 {
                     "error": {
                         "type": "NoData",
@@ -726,7 +726,7 @@ class MarketDataService:
 
         quotes = [q for q in await asyncio.gather(*(fetch(e) for e in targets)) if q]
         if not quotes:
-            raise TickFeedError(
+            raise TickscopeError(
                 {
                     "error": {
                         "type": "NoData",
@@ -768,26 +768,26 @@ class MarketDataService:
     def _validate_filters(cls, filters: list[dict[str, Any]]) -> None:
         """Validate screen filters up front (§6): clear error beats silent miss."""
         if not filters:
-            raise TickFeedError(
+            raise TickscopeError(
                 cls._bad_request("screen_market requires at least one filter.")
             )
         for i, f in enumerate(filters):
             if not isinstance(f, dict) or not ("indicator" in f or "metric" in f):
-                raise TickFeedError(
+                raise TickscopeError(
                     cls._bad_request(
                         f"filter[{i}] must specify an 'indicator' or 'metric' key."
                     )
                 )
             op = f.get("op")
             if op not in cls._VALID_OPS:
-                raise TickFeedError(
+                raise TickscopeError(
                     cls._bad_request(
                         f"filter[{i}] has invalid op {op!r}; "
                         f"expected one of {list(cls._VALID_OPS)}."
                     )
                 )
             if f.get("value") is None:
-                raise TickFeedError(
+                raise TickscopeError(
                     cls._bad_request(f"filter[{i}] is missing a numeric 'value'.")
                 )
 
@@ -841,7 +841,7 @@ class MarketDataService:
                     row = await self._screen_one(ex, sym, timeframe, filters, sort_by, tickers)
                     if row is not None:
                         matched.append(row)
-                except TickFeedError as exc:
+                except TickscopeError as exc:
                     errors.append({"symbol": sym, **exc.payload["error"]})
                 except Exception as exc:  # noqa: BLE001
                     errors.append({"symbol": sym, "type": type(exc).__name__, "message": str(exc)})
@@ -973,7 +973,7 @@ class MarketDataService:
         sym = await self._normalize(ex, symbol)
         inst = await self.exchanges.get(ex)
         if not (getattr(inst, "has", {}) or {}).get("fetchFundingRate"):
-            raise TickFeedError(
+            raise TickscopeError(
                 {
                     "error": {
                         "type": "NotSupported",

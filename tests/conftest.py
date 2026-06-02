@@ -10,8 +10,8 @@ from typing import Any
 import pytest
 import pytest_asyncio
 
-from tickfeed.config import Settings
-from tickfeed.core.service import MarketDataService
+from tickscope.config import Settings
+from tickscope.core.service import MarketDataService
 
 
 class FakeExchange:

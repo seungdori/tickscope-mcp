@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 import pytest_asyncio
 
-import tickfeed.runtime as runtime
+import tickscope.runtime as runtime
 
 pytestmark = pytest.mark.asyncio
 
@@ -27,7 +27,7 @@ async def mcp_call(service) -> AsyncIterator[ToolCall]:
     server, and return a helper that calls tools through the real MCP path."""
     runtime._service = service
 
-    from tickfeed.server import build_server
+    from tickscope.server import build_server
 
     mcp = build_server()
 

@@ -22,9 +22,9 @@ def _dump(payload: Any) -> str:
 
 def register(mcp: FastMCP) -> None:
     @mcp.resource(
-        "tickfeed://status",
+        "tickscope://status",
         name="server_status",
-        description="TickFeed health and diagnostics snapshot.",
+        description="Tickscope health and diagnostics snapshot.",
         mime_type="application/json",
     )
     def status() -> str:
@@ -34,7 +34,7 @@ def register(mcp: FastMCP) -> None:
             return _dump(error_payload(exc))
 
     @mcp.resource(
-        "tickfeed://watched",
+        "tickscope://watched",
         name="watched_symbols",
         description="Currently watched symbols with buffer state and staleness.",
         mime_type="application/json",
@@ -46,7 +46,7 @@ def register(mcp: FastMCP) -> None:
             return _dump(error_payload(exc))
 
     @mcp.resource(
-        "tickfeed://ticker/{exchange}/{symbol}",
+        "tickscope://ticker/{exchange}/{symbol}",
         name="ticker",
         description=(
             "Latest ticker snapshot for an exchange/symbol "

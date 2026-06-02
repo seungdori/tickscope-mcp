@@ -7,7 +7,7 @@ import math
 import pandas as pd
 import pytest
 
-from tickfeed.core import indicators_engine as ie
+from tickscope.core import indicators_engine as ie
 
 # Classic Wilder/StockCharts RSI dataset (published RSI ~70.5 then ~37.79).
 WILDER = [

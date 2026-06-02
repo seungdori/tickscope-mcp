@@ -9,8 +9,8 @@ import asyncio
 
 import pytest
 
-from tickfeed.config import Settings
-from tickfeed.core.service import MarketDataService
+from tickscope.config import Settings
+from tickscope.core.service import MarketDataService
 
 pytestmark = [pytest.mark.live, pytest.mark.asyncio]
 

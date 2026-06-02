@@ -1,4 +1,4 @@
-# Contributing to TickFeed MCP
+# Contributing to Tickscope MCP
 
 Thanks for your interest! Issues and PRs are welcome. This project aims to be a
 small, well-tested, read-only market-data MCP server — please keep changes in
@@ -28,12 +28,12 @@ uv run examples/demo.py   # live end-to-end smoke
 ## Project layout
 
 ```
-tickfeed-mcp/
-├── src/tickfeed/
-│   ├── __main__.py            # console entrypoint (tickfeed / uvx tickfeed-mcp)
+tickscope-mcp/
+├── src/tickscope/
+│   ├── __main__.py            # console entrypoint (tickscope / uvx tickscope-mcp)
 │   ├── server.py              # FastMCP app, lifespan, tool + resource registration
 │   ├── runtime.py             # process-wide MarketDataService singleton
-│   ├── config.py              # pydantic-settings (TICKFEED_* env vars)
+│   ├── config.py              # pydantic-settings (TICKSCOPE_* env vars)
 │   ├── models.py              # pydantic I/O contracts
 │   ├── resources.py           # MCP resources (status / watched / ticker)
 │   ├── utils.py               # symbol/time normalization, structured errors, disclaimer

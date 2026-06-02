@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from tickfeed.core import structure as st
+from tickscope.core import structure as st
 
 
 def _df(o, h, low, c):

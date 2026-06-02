@@ -5,7 +5,7 @@ from __future__ import annotations
 import ccxt
 import pytest
 
-from tickfeed.core.retry import with_retry
+from tickscope.core.retry import with_retry
 
 pytestmark = pytest.mark.asyncio
 

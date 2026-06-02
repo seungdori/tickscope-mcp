@@ -1,24 +1,24 @@
 <div align="center">
 
-# TickFeed MCP
+# Tickscope MCP
 
 **面向任意 AI 智能体的实时、免费加密货币行情数据 —— 通过 MCP。**
 
-[![PyPI](https://img.shields.io/pypi/v/tickfeed-mcp.svg)](https://pypi.org/project/tickfeed-mcp/)
-[![Python](https://img.shields.io/pypi/pyversions/tickfeed-mcp.svg)](https://pypi.org/project/tickfeed-mcp/)
+[![PyPI](https://img.shields.io/pypi/v/tickscope-mcp.svg)](https://pypi.org/project/tickscope-mcp/)
+[![Python](https://img.shields.io/pypi/pyversions/tickscope-mcp.svg)](https://pypi.org/project/tickscope-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/seungdori/tickfeed-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/seungdori/tickfeed-mcp/actions/workflows/ci.yml)
+[![CI](https://github.com/seungdori/tickscope-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/seungdori/tickscope-mcp/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
 [![MCP](https://img.shields.io/badge/MCP-server-6E56CF.svg)](https://modelcontextprotocol.io)
 
 [English](README.md) · [한국어](README.ko.md) · **中文** · [日本語](README.ja.md)
 
-![TickFeed demo](docs/demo-agent.gif)
+![Tickscope demo](docs/demo-agent.gif)
 
 </div>
 
-TickFeed 是一个可自托管的 [Model Context Protocol](https://modelcontextprotocol.io) 服务器，为任意 MCP 客户端（Claude Code、Cursor、Codex、Gemini CLI 等）**免费提供实时与历史加密货币行情数据**。它在后台持续维持交易所的 WebSocket 长连接，因此你的智能体可以直接从中读取**亚秒级延迟**的实时价格。同一个服务器还提供 **73 个技术指标**与**图表结构识别**，无需 API 密钥。
+Tickscope 是一个可自托管的 [Model Context Protocol](https://modelcontextprotocol.io) 服务器，为任意 MCP 客户端（Claude Code、Cursor、Codex、Gemini CLI 等）**免费提供实时与历史加密货币行情数据**。它在后台持续维持交易所的 WebSocket 长连接，因此你的智能体可以直接从中读取**亚秒级延迟**的实时价格。同一个服务器还提供 **73 个技术指标**与**图表结构识别**，无需 API 密钥。
 
 > ⚠️ 教育/研究工具。本工具不提供金融、投资或交易建议，也不保证数据的准确性与时效性。
 
@@ -32,7 +32,7 @@ TickFeed 是一个可自托管的 [Model Context Protocol](https://modelcontextp
 
 ## 为什么
 
-交易类智能体正在爆发式增长，而其底层数据层依然碎片化、仅支持 REST 轮询、且常常收费。TickFeed 为这些智能体提供**实时、免费的行情数据**，全部来自一个服务器 —— 多个交易所，无需 API 密钥。
+交易类智能体正在爆发式增长，而其底层数据层依然碎片化、仅支持 REST 轮询、且常常收费。Tickscope 为这些智能体提供**实时、免费的行情数据**，全部来自一个服务器 —— 多个交易所，无需 API 密钥。
 
 ## 运行演示
 
@@ -46,7 +46,7 @@ uv run examples/demo.py ETH/USDT 4h
 ## 30 秒安装
 
 ```bash
-uvx tickfeed-mcp
+uvx tickscope-mcp
 ```
 
 在你的客户端中注册（Claude Code 示例，[`examples/claude_code_config.json`](examples/claude_code_config.json)）：
@@ -54,12 +54,12 @@ uvx tickfeed-mcp
 ```json
 {
   "mcpServers": {
-    "tickfeed": {
+    "tickscope": {
       "command": "uvx",
-      "args": ["tickfeed-mcp"],
+      "args": ["tickscope-mcp"],
       "env": {
-        "TICKFEED_EXCHANGES": "binance,bybit,okx",
-        "TICKFEED_DEFAULT_EXCHANGE": "binance"
+        "TICKSCOPE_EXCHANGES": "binance,bybit,okx",
+        "TICKSCOPE_DEFAULT_EXCHANGE": "binance"
       }
     }
   }
@@ -76,7 +76,7 @@ Cursor、Codex 和 Gemini CLI 在各自的 MCP 配置文件中使用相同的 `c
 | Bybit | ✅ | ✅ |
 | OKX | ✅ | ✅ |
 
-任何 [ccxt](https://github.com/ccxt/ccxt) 支持的交易所都可通过 `TICKFEED_EXCHANGES` 启用。仅公开数据 —— 无需密钥。
+任何 [ccxt](https://github.com/ccxt/ccxt) 支持的交易所都可通过 `TICKSCOPE_EXCHANGES` 启用。仅公开数据 —— 无需密钥。
 
 ## 工具
 
@@ -117,7 +117,7 @@ Cursor、Codex 和 Gemini CLI 在各自的 MCP 配置文件中使用相同的 `c
 
 ### 结构识别
 
-除了数值指标，TickFeed 还能描述*图表上正在发生什么*：`detect_patterns` 为 K 线形态（吞没、锤子/上吊线、十字星家族、早晨/黄昏之星、红三兵/黑三鸦等）命名并标注方向偏好；`analyze_structure` 返回标注为 HH/HL/LH/LL 的摆动高低点、推断出的趋势，以及结构突破（BOS）/ 性质改变（CHoCH）事件（SMC 风格）；`find_support_resistance` 将摆动点聚类为支撑/阻力区并计数触碰次数。有了这些，智能体就能用交易者的语言*描述*图表。
+除了数值指标，Tickscope 还能描述*图表上正在发生什么*：`detect_patterns` 为 K 线形态（吞没、锤子/上吊线、十字星家族、早晨/黄昏之星、红三兵/黑三鸦等）命名并标注方向偏好；`analyze_structure` 返回标注为 HH/HL/LH/LL 的摆动高低点、推断出的趋势，以及结构突破（BOS）/ 性质改变（CHoCH）事件（SMC 风格）；`find_support_resistance` 将摆动点聚类为支撑/阻力区并计数触碰次数。有了这些，智能体就能用交易者的语言*描述*图表。
 
 ### 深度分析
 
@@ -128,11 +128,11 @@ Cursor、Codex 和 Gemini CLI 在各自的 MCP 配置文件中使用相同的 `c
 - **历史信号表现：** 针对当前背离，统计该标的/周期上过去每一次**已确认**出现后的前向收益分布（次数、胜率、中位数）。这是一项严格因果的事件研究，无未来函数、不重绘。
 - **综合判定：** 偏向、置信度、各周期一致性、执行周期上的市场状态，外加明确的注意事项 —— 全部在 Python 里确定性地算出，结论不依赖模型对原始数字的肉眼判断。
 
-更轻量的 `compute_indicators` 现在也内联带上同样的市场状态背景（几乎零开销），信号历史按收盘 K 线记忆化，所以热读取依旧很快。支持 MCP 提示词的客户端会把它暴露为斜杠命令 `/mcp__tickfeed__deep_analyze`（传入标的与周期），让用户随手触发一次完整解读。
+更轻量的 `compute_indicators` 现在也内联带上同样的市场状态背景（几乎零开销），信号历史按收盘 K 线记忆化，所以热读取依旧很快。支持 MCP 提示词的客户端会把它暴露为斜杠命令 `/mcp__tickscope__deep_analyze`（传入标的与周期），让用户随手触发一次完整解读。
 
 ### 资源
 
-支持的客户端还可以将实时状态作为 MCP 资源读取：`tickfeed://status`、`tickfeed://watched`，以及模板 `tickfeed://ticker/{exchange}/{symbol}`。
+支持的客户端还可以将实时状态作为 MCP 资源读取：`tickscope://status`、`tickscope://watched`，以及模板 `tickscope://ticker/{exchange}/{symbol}`。
 
 ## 示例提示词
 
@@ -148,16 +148,16 @@ Cursor、Codex 和 Gemini CLI 在各自的 MCP 配置文件中使用相同的 `c
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `TICKFEED_EXCHANGES` | `binance,bybit,okx` | 启用的交易所（逗号分隔） |
-| `TICKFEED_DEFAULT_EXCHANGE` | `binance` | 省略 `exchange` 时的默认值 |
-| `TICKFEED_MAX_WATCHED_SYMBOLS` | `25` | 并发 WS 订阅上限（超出按 LRU 释放） |
-| `TICKFEED_RING_BUFFER_SIZE` | `1000` | 每个标的的成交缓冲区大小 |
-| `TICKFEED_OHLCV_CACHE_PATH` | `~/.tickfeed/ohlcv.duckdb` | DuckDB 缓存文件 |
-| `TICKFEED_OHLCV_CACHE_TTL_S` | `60` | 最新 K 线的新鲜度窗口 |
-| `TICKFEED_REST_RETRIES` | `3` | 瞬时 REST 错误（限频/网络）的重试次数 |
-| `TICKFEED_SCREEN_CONCURRENCY` | `5` | 筛选/聚合时的并发标的数 |
-| `TICKFEED_TRANSPORT` | `stdio` | `stdio` 或 `http` |
-| `TICKFEED_LOG_LEVEL` | `INFO` | 日志级别 |
+| `TICKSCOPE_EXCHANGES` | `binance,bybit,okx` | 启用的交易所（逗号分隔） |
+| `TICKSCOPE_DEFAULT_EXCHANGE` | `binance` | 省略 `exchange` 时的默认值 |
+| `TICKSCOPE_MAX_WATCHED_SYMBOLS` | `25` | 并发 WS 订阅上限（超出按 LRU 释放） |
+| `TICKSCOPE_RING_BUFFER_SIZE` | `1000` | 每个标的的成交缓冲区大小 |
+| `TICKSCOPE_OHLCV_CACHE_PATH` | `~/.tickscope/ohlcv.duckdb` | DuckDB 缓存文件 |
+| `TICKSCOPE_OHLCV_CACHE_TTL_S` | `60` | 最新 K 线的新鲜度窗口 |
+| `TICKSCOPE_REST_RETRIES` | `3` | 瞬时 REST 错误（限频/网络）的重试次数 |
+| `TICKSCOPE_SCREEN_CONCURRENCY` | `5` | 筛选/聚合时的并发标的数 |
+| `TICKSCOPE_TRANSPORT` | `stdio` | `stdio` 或 `http` |
+| `TICKSCOPE_LOG_LEVEL` | `INFO` | 日志级别 |
 
 ## 开发
 
@@ -186,7 +186,7 @@ ruff check . && mypy  # 代码检查 + 类型门禁
 
 ## 许可证
 
-[MIT](LICENSE) © TickFeed contributors.
+[MIT](LICENSE) © Tickscope contributors.
 
 ## 免责声明
 

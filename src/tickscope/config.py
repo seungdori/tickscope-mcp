@@ -1,6 +1,6 @@
 """Configuration via environment variables (pydantic-settings).
 
-All settings are prefixed with ``TICKFEED_``. v1 requires no API keys.
+All settings are prefixed with ``TICKSCOPE_``. v1 requires no API keys.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     """Runtime configuration. Loaded from environment / .env once per process."""
 
     model_config = SettingsConfigDict(
-        env_prefix="TICKFEED_",
+        env_prefix="TICKSCOPE_",
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     max_watched_symbols: int = 25
     ring_buffer_size: int = 1000
 
-    ohlcv_cache_path: str = "~/.tickfeed/ohlcv.duckdb"
+    ohlcv_cache_path: str = "~/.tickscope/ohlcv.duckdb"
     ohlcv_cache_ttl_s: int = 60
 
     # REST resilience (spec §9.2): retry transient errors with exponential backoff.

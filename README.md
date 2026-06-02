@@ -1,13 +1,13 @@
 <div align="center">
 
-# TickFeed MCP
+# Tickscope MCP
 
 **Real-time, free crypto market data for any AI agent — via MCP.**
 
-[![PyPI](https://img.shields.io/pypi/v/tickfeed-mcp.svg)](https://pypi.org/project/tickfeed-mcp/)
-[![Python](https://img.shields.io/pypi/pyversions/tickfeed-mcp.svg)](https://pypi.org/project/tickfeed-mcp/)
+[![PyPI](https://img.shields.io/pypi/v/tickscope-mcp.svg)](https://pypi.org/project/tickscope-mcp/)
+[![Python](https://img.shields.io/pypi/pyversions/tickscope-mcp.svg)](https://pypi.org/project/tickscope-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/seungdori/tickfeed-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/seungdori/tickfeed-mcp/actions/workflows/ci.yml)
+[![CI](https://github.com/seungdori/tickscope-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/seungdori/tickscope-mcp/actions/workflows/ci.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
 [![MCP](https://img.shields.io/badge/MCP-server-6E56CF.svg)](https://modelcontextprotocol.io)
@@ -15,11 +15,11 @@
 **English** · [한국어](README.ko.md) · [中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 <!-- Live Claude Code walkthrough — see examples/RECORDING.md -->
-![TickFeed demo](docs/demo-agent.gif)
+![Tickscope demo](docs/demo-agent.gif)
 
 </div>
 
-TickFeed is a self-hostable [Model Context Protocol](https://modelcontextprotocol.io) server that gives any MCP client (Claude Code, Cursor, Codex, Gemini CLI, …) **real-time and historical crypto market data for free**. It keeps exchange WebSocket connections warm in the background, so your agent reads prices that are fresh to the sub-second, straight from a live connection. The same server covers **73 technical indicators** and **chart-structure recognition**, with no API keys.
+Tickscope is a self-hostable [Model Context Protocol](https://modelcontextprotocol.io) server that gives any MCP client (Claude Code, Cursor, Codex, Gemini CLI, …) **real-time and historical crypto market data for free**. It keeps exchange WebSocket connections warm in the background, so your agent reads prices that are fresh to the sub-second, straight from a live connection. The same server covers **73 technical indicators** and **chart-structure recognition**, with no API keys.
 
 > ⚠️ Educational/research tool. It does not provide financial, investment, or trading advice, and it does not guarantee data accuracy or timeliness.
 
@@ -33,7 +33,7 @@ TickFeed is a self-hostable [Model Context Protocol](https://modelcontextprotoco
 
 ## Why
 
-Trading agents are exploding, yet their data layer stays fragmented, REST-poll-only, and often locked behind a paywall. TickFeed gives those agents **real-time, free market data** from one server — many exchanges, no API keys.
+Trading agents are exploding, yet their data layer stays fragmented, REST-poll-only, and often locked behind a paywall. Tickscope gives those agents **real-time, free market data** from one server — many exchanges, no API keys.
 
 ## See it run
 
@@ -47,7 +47,7 @@ A colorized terminal walkthrough — cold→warm freshness (REST → WebSocket),
 ## 30-second install
 
 ```bash
-uvx tickfeed-mcp
+uvx tickscope-mcp
 ```
 
 Register it with your client (Claude Code example, [`examples/claude_code_config.json`](examples/claude_code_config.json)):
@@ -55,12 +55,12 @@ Register it with your client (Claude Code example, [`examples/claude_code_config
 ```json
 {
   "mcpServers": {
-    "tickfeed": {
+    "tickscope": {
       "command": "uvx",
-      "args": ["tickfeed-mcp"],
+      "args": ["tickscope-mcp"],
       "env": {
-        "TICKFEED_EXCHANGES": "binance,bybit,okx",
-        "TICKFEED_DEFAULT_EXCHANGE": "binance"
+        "TICKSCOPE_EXCHANGES": "binance,bybit,okx",
+        "TICKSCOPE_DEFAULT_EXCHANGE": "binance"
       }
     }
   }
@@ -77,7 +77,7 @@ Cursor, Codex and Gemini CLI use the same `command`/`args`/`env` shape in their 
 | Bybit | ✅ | ✅ |
 | OKX | ✅ | ✅ |
 
-Any [ccxt](https://github.com/ccxt/ccxt)-supported exchange can be enabled via `TICKFEED_EXCHANGES`. Public data only — no keys required.
+Any [ccxt](https://github.com/ccxt/ccxt)-supported exchange can be enabled via `TICKSCOPE_EXCHANGES`. Public data only — no keys required.
 
 ## Tools
 
@@ -118,7 +118,7 @@ Specs are `"name:p1,p2"` and also accept **Pine Script syntax** — `ta.rsi(14)`
 
 ### Structure recognition
 
-On top of numeric indicators, TickFeed describes *what the chart is doing*: `detect_patterns` names candlestick patterns (engulfing, hammer/hanging man, doji family, morning/evening star, three soldiers/crows, …) with their bias; `analyze_structure` returns swing highs/lows labeled HH/HL/LH/LL, the inferred trend, and Break-of-Structure / Change-of-Character events (SMC-style); `find_support_resistance` clusters swing pivots into support/resistance zones with touch counts. These give an agent the vocabulary to describe a chart the way a trader would.
+On top of numeric indicators, Tickscope describes *what the chart is doing*: `detect_patterns` names candlestick patterns (engulfing, hammer/hanging man, doji family, morning/evening star, three soldiers/crows, …) with their bias; `analyze_structure` returns swing highs/lows labeled HH/HL/LH/LL, the inferred trend, and Break-of-Structure / Change-of-Character events (SMC-style); `find_support_resistance` clusters swing pivots into support/resistance zones with touch counts. These give an agent the vocabulary to describe a chart the way a trader would.
 
 ### Deep analysis
 
@@ -129,11 +129,11 @@ On top of numeric indicators, TickFeed describes *what the chart is doing*: `det
 - **Historical signal performance** — for the current divergence, the forward-return distribution of every past *confirmed* occurrence on this symbol/timeframe (count, win rate, median). A strictly causal event study — no look-ahead, no repaint.
 - **A synthesized verdict** — bias, confidence, timeframe agreement, the execution-timeframe market state, and explicit caveats, all computed deterministically in Python so the call never hinges on the model eyeballing raw numbers.
 
-`compute_indicators` now carries the same market-state context inline (it's ~free), and signal history is memoized per closed bar, so warm reads stay fast. Clients that support MCP prompts expose this as a slash command — `/mcp__tickfeed__deep_analyze` (symbol + timeframe) — to trigger a full read on demand.
+`compute_indicators` now carries the same market-state context inline (it's ~free), and signal history is memoized per closed bar, so warm reads stay fast. Clients that support MCP prompts expose this as a slash command — `/mcp__tickscope__deep_analyze` (symbol + timeframe) — to trigger a full read on demand.
 
 ### Resources
 
-Supporting clients can also read live state as MCP resources: `tickfeed://status`, `tickfeed://watched`, and the template `tickfeed://ticker/{exchange}/{symbol}`.
+Supporting clients can also read live state as MCP resources: `tickscope://status`, `tickscope://watched`, and the template `tickscope://ticker/{exchange}/{symbol}`.
 
 ## Example prompts
 
@@ -149,16 +149,16 @@ All settings are environment variables (see [`.env.example`](.env.example)):
 
 | Variable | Default | Description |
 |---|---|---|
-| `TICKFEED_EXCHANGES` | `binance,bybit,okx` | Enabled exchanges (comma-separated) |
-| `TICKFEED_DEFAULT_EXCHANGE` | `binance` | Default when `exchange` is omitted |
-| `TICKFEED_MAX_WATCHED_SYMBOLS` | `25` | Max concurrent WS subscriptions (LRU evicted) |
-| `TICKFEED_RING_BUFFER_SIZE` | `1000` | Per-symbol trade buffer size |
-| `TICKFEED_OHLCV_CACHE_PATH` | `~/.tickfeed/ohlcv.duckdb` | DuckDB cache file |
-| `TICKFEED_OHLCV_CACHE_TTL_S` | `60` | Freshness window for the newest candle |
-| `TICKFEED_REST_RETRIES` | `3` | Retry attempts for transient REST errors (rate limit / network) |
-| `TICKFEED_SCREEN_CONCURRENCY` | `5` | Max concurrent symbols during screening/aggregation |
-| `TICKFEED_TRANSPORT` | `stdio` | `stdio` or `http` |
-| `TICKFEED_LOG_LEVEL` | `INFO` | Log level |
+| `TICKSCOPE_EXCHANGES` | `binance,bybit,okx` | Enabled exchanges (comma-separated) |
+| `TICKSCOPE_DEFAULT_EXCHANGE` | `binance` | Default when `exchange` is omitted |
+| `TICKSCOPE_MAX_WATCHED_SYMBOLS` | `25` | Max concurrent WS subscriptions (LRU evicted) |
+| `TICKSCOPE_RING_BUFFER_SIZE` | `1000` | Per-symbol trade buffer size |
+| `TICKSCOPE_OHLCV_CACHE_PATH` | `~/.tickscope/ohlcv.duckdb` | DuckDB cache file |
+| `TICKSCOPE_OHLCV_CACHE_TTL_S` | `60` | Freshness window for the newest candle |
+| `TICKSCOPE_REST_RETRIES` | `3` | Retry attempts for transient REST errors (rate limit / network) |
+| `TICKSCOPE_SCREEN_CONCURRENCY` | `5` | Max concurrent symbols during screening/aggregation |
+| `TICKSCOPE_TRANSPORT` | `stdio` | `stdio` or `http` |
+| `TICKSCOPE_LOG_LEVEL` | `INFO` | Log level |
 
 ## Development
 
@@ -187,7 +187,7 @@ Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code 
 
 ## License
 
-[MIT](LICENSE) © TickFeed contributors.
+[MIT](LICENSE) © Tickscope contributors.
 
 ## Disclaimer
 

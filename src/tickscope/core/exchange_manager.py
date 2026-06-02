@@ -15,7 +15,7 @@ import ccxt
 import ccxt.async_support as accxt
 import ccxt.pro as ccxtpro
 
-from ..utils import TickFeedError
+from ..utils import TickscopeError
 
 
 class ExchangeManager:
@@ -33,7 +33,7 @@ class ExchangeManager:
 
     def _build(self, exchange_id: str) -> Any:
         if exchange_id not in self._allowed:
-            raise TickFeedError(
+            raise TickscopeError(
                 {
                     "error": {
                         "type": "ExchangeNotConfigured",
@@ -49,7 +49,7 @@ class ExchangeManager:
             )
         factory = getattr(ccxtpro, exchange_id, None) or getattr(accxt, exchange_id, None)
         if factory is None:
-            raise TickFeedError(
+            raise TickscopeError(
                 {
                     "error": {
                         "type": "BadExchange",

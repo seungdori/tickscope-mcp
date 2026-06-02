@@ -3,13 +3,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tickfeed-mcp"
+name = "tickscope-mcp"
 version = "0.1.0"
 description = "Real-time, free crypto market data for any AI coding agent — via MCP."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
-authors = [{ name = "TickFeed" }]
+authors = [{ name = "Tickscope" }]
 keywords = [
     "mcp", "model-context-protocol", "crypto", "cryptocurrency", "trading",
     "ccxt", "market-data", "websocket", "technical-analysis", "indicators",
@@ -48,18 +48,18 @@ dev = [
 ]
 
 [project.scripts]
-tickfeed = "tickfeed.__main__:main"
-tickfeed-mcp = "tickfeed.__main__:main"
+tickscope = "tickscope.__main__:main"
+tickscope-mcp = "tickscope.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/seungdori/tickfeed-mcp"
-Repository = "https://github.com/seungdori/tickfeed-mcp"
-Documentation = "https://github.com/seungdori/tickfeed-mcp#readme"
-Issues = "https://github.com/seungdori/tickfeed-mcp/issues"
-Changelog = "https://github.com/seungdori/tickfeed-mcp/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/seungdori/tickscope-mcp"
+Repository = "https://github.com/seungdori/tickscope-mcp"
+Documentation = "https://github.com/seungdori/tickscope-mcp#readme"
+Issues = "https://github.com/seungdori/tickscope-mcp/issues"
+Changelog = "https://github.com/seungdori/tickscope-mcp/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/tickfeed"]
+packages = ["src/tickscope"]
 
 [tool.ruff]
 line-length = 100
@@ -74,7 +74,7 @@ ignore = ["E501", "RUF001", "RUF002", "RUF003"]
 python_version = "3.11"
 warn_unused_ignores = true
 ignore_missing_imports = true
-packages = ["tickfeed"]
+packages = ["tickscope"]
 mypy_path = "src"
 
 [tool.pytest.ini_options]

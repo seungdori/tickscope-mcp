@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import ccxt
 
-from tickfeed.config import Settings
-from tickfeed.utils import (
+from tickscope.config import Settings
+from tickscope.utils import (
     age_ms,
     error_payload,
     iso_or_ms_to_ms,
@@ -46,7 +46,7 @@ def test_age_ms_non_negative():
 
 def test_settings_parses_comma_separated_exchanges(monkeypatch):
     # Regression: pydantic-settings must not JSON-parse this env var.
-    monkeypatch.setenv("TICKFEED_EXCHANGES", "binance,bybit,okx")
+    monkeypatch.setenv("TICKSCOPE_EXCHANGES", "binance,bybit,okx")
     settings = Settings()
     assert settings.exchanges == ["binance", "bybit", "okx"]
 

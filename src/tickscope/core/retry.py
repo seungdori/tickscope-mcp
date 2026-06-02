@@ -16,7 +16,7 @@ from typing import TypeVar
 
 import ccxt
 
-logger = logging.getLogger("tickfeed.retry")
+logger = logging.getLogger("tickscope.retry")
 
 T = TypeVar("T")
 

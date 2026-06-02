@@ -20,8 +20,8 @@ env/
 # Env / secrets
 .env
 
-# TickFeed runtime data
-.tickfeed/
+# Tickscope runtime data
+.tickscope/
 *.duckdb
 *.duckdb.wal
 
@@ -34,4 +34,4 @@ env/
 .vscode/
 
 # Internal design docs (kept locally, not shipped)
-TickFeed_MCP_구현명세.md
+Tickscope_MCP_구현명세.md

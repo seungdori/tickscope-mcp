@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""TickFeed live demo — a recordable walkthrough of the value proposition.
+"""Tickscope live demo — a recordable walkthrough of the value proposition.
 
 Runs against public Binance data (no API keys) and narrates a full analysis:
 cold→warm freshness (REST → WebSocket), indicators with signals, divergence,
@@ -16,8 +16,8 @@ import asyncio
 import logging
 import sys
 
-from tickfeed.config import Settings
-from tickfeed.core.service import MarketDataService
+from tickscope.config import Settings
+from tickscope.core.service import MarketDataService
 
 # Keep the walkthrough clean (no background WS reconnect chatter) for recording.
 logging.getLogger().setLevel(logging.ERROR)
@@ -42,7 +42,7 @@ async def main(symbol: str, timeframe: str) -> None:
         Settings(exchanges=["binance", "bybit", "okx"], default_exchange="binance")
     )
     try:
-        print(f"{BOLD}TickFeed{RESET} {DIM}— real-time, free market data for AI agents{RESET}")
+        print(f"{BOLD}Tickscope{RESET} {DIM}— real-time, free market data for AI agents{RESET}")
         print(f"{DIM}symbol={symbol}  timeframe={timeframe}{RESET}")
 
         header("1. Live price — watch it go from REST to WebSocket")

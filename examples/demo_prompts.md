@@ -1,6 +1,6 @@
 # Demo prompts
 
-Real-usage prompts for showcasing TickFeed in an MCP client (great for the README GIF).
+Real-usage prompts for showcasing Tickscope in an MCP client (great for the README GIF).
 
 ## Live price
 

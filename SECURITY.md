@@ -2,7 +2,7 @@
 
 ## Scope & design (read this first)
 
-TickFeed is **read-only and public-data only by design**. v1:
+Tickscope is **read-only and public-data only by design**. v1:
 
 - does **not** execute orders, read balances, or move funds;
 - does **not** require or accept exchange API secrets;
@@ -16,7 +16,7 @@ environment variables only.
 
 Please report security issues **privately**, not via public issues:
 
-- Use [GitHub Security Advisories](https://github.com/seungdori/tickfeed-mcp/security/advisories/new)
+- Use [GitHub Security Advisories](https://github.com/seungdori/tickscope-mcp/security/advisories/new)
   (preferred), or
 - email the maintainers with the details and reproduction steps.
 

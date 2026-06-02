@@ -13,7 +13,7 @@ from typing import Any
 
 import duckdb
 
-logger = logging.getLogger("tickfeed.storage")
+logger = logging.getLogger("tickscope.storage")
 
 
 class OHLCVStore:

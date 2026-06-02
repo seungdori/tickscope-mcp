@@ -43,7 +43,7 @@ def build_server() -> FastMCP:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
     mcp = FastMCP(
-        "TickFeed",
+        "Tickscope",
         instructions=(
             "Real-time and historical crypto market data via MCP. "
             "Use get_ticker for current prices, get_ohlcv for candles, "
