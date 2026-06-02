@@ -140,10 +140,14 @@ Supporting clients can also read live state as MCP resources: `tickscope://statu
 ## Example prompts
 
 - "What's BTC/USDT trading at on Binance right now, and the 24h change?"
-- "Compute the 1h RSI and MACD for BTC/USDT and tell me if there's a divergence."
-- "Screen the top 30 USDT pairs by volume for ones with RSI below 30."
-- "What's the current perpetual funding rate for BTC on Bybit?"
-- "Show me the ETH/USDT order book spread for the top 10 levels."
+- "Should I care about this SOL/USDT setup? Do a deep, multi-timeframe read."
+- "Is there an RSI divergence on BTC/USDT 4h — and how has that signal performed on this pair before?"
+- "Screen the top 50 USDT pairs by volume for ones with RSI below 30."
+- "Map the key support/resistance on ETH/USDT 4h and tell me if the structure just broke (BOS/CHoCH)."
+- "What's the perpetual funding rate for BTC on Bybit right now — is it overheated?"
+- "Compare BTC/USDT across Binance, Bybit and OKX and show the arbitrage spread."
+
+See [`examples/demo_prompts.md`](examples/demo_prompts.md) for a fuller recipe book (deep analysis, signal backtests, screening, monitoring, strategy checks).
 
 ## Configuration
 

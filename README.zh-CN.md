@@ -137,10 +137,14 @@ Cursor、Codex 和 Gemini CLI 在各自的 MCP 配置文件中使用相同的 `c
 ## 示例提示词
 
 - “币安 BTC/USDT 现在多少钱，24 小时涨跌幅是多少？”
-- “计算 BTC/USDT 的 1 小时 RSI 和 MACD，看看有没有背离。”
-- “在成交量前 30 的 USDT 交易对里，筛选出 RSI 低于 30 的。”
-- “Bybit 上 BTC 永续合约现在的资金费率是多少？”
-- “展示 ETH/USDT 订单簿前 10 档的价差。”
+- “这个 SOL/USDT 的入场机会值得关注吗？跨多个周期帮我深度解读一下。”
+- “BTC/USDT 4 小时有没有 RSI 背离？如果有，这个信号过去在该交易对上的表现如何？”
+- “在成交量前 50 的 USDT 交易对里，筛选出 RSI 低于 30 的。”
+- “标出 ETH/USDT 4 小时的关键支撑/阻力，并告诉我结构是否刚刚被打破（BOS/CHoCH）。”
+- “Bybit 上 BTC 永续的资金费率现在是多少？是不是过热了？”
+- “把 BTC/USDT 在币安、Bybit、OKX 上做对比，给出套利价差。”
+
+更多示例见 [`examples/demo_prompts.md`](examples/demo_prompts.md) 配方手册（深度分析、信号历史回测、筛选、监控、策略检查等）。
 
 ## 配置
 
