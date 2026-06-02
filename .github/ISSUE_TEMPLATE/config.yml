@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/seungdori/tickfeed-mcp/security/advisories/new
+    about: Please report security issues privately, not as public issues.
+  - name: Model Context Protocol
+    url: https://modelcontextprotocol.io
+    about: Docs for MCP itself (clients, transports, the spec).

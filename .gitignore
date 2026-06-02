@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Env / secrets
+.env
+
+# TickFeed runtime data
+.tickfeed/
+*.duckdb
+*.duckdb.wal
+
+# Recording artifacts (keep the final docs/demo.gif)
+*.cast
+demo.tape
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
