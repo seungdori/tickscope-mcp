@@ -7,6 +7,7 @@ range requests hit the cache and avoid redundant exchange calls / rate limits.
 from __future__ import annotations
 
 import logging
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -22,9 +23,15 @@ class OHLCVStore:
     If the file is already locked (e.g. a second MCP client, or the demo, runs
     at the same time), we fall back to a private in-memory cache so the server
     still starts and serves data — it just won't share the on-disk cache.
+
+    A single :class:`duckdb.DuckDBPyConnection` is not safe for *concurrent*
+    use. The service offloads every call here onto a worker thread (so the
+    asyncio event loop is never blocked), so the lock below serializes those
+    workers — keeping access correct without re-blocking the loop.
     """
 
     def __init__(self, path: Path):
+        self._lock = threading.Lock()
         try:
             self._conn = duckdb.connect(str(path))
             self.persistent = True
@@ -64,14 +71,15 @@ class OHLCVStore:
             (exchange.lower(), symbol.upper(), timeframe, int(r[0]), r[1], r[2], r[3], r[4], r[5])
             for r in rows
         ]
-        self._conn.executemany(
-            """
-            INSERT OR REPLACE INTO ohlcv
-                (exchange, symbol, timeframe, ts, open, high, low, close, volume)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            payload,
-        )
+        with self._lock:
+            self._conn.executemany(
+                """
+                INSERT OR REPLACE INTO ohlcv
+                    (exchange, symbol, timeframe, ts, open, high, low, close, volume)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                payload,
+            )
 
     def query(
         self,
@@ -89,28 +97,31 @@ class OHLCVStore:
             where += " AND ts >= ?"
             params.append(since_ms)
         params.append(limit)
-        result = self._conn.execute(
-            f"""
-            SELECT ts, open, high, low, close, volume FROM (
-                SELECT ts, open, high, low, close, volume FROM ohlcv
-                WHERE {where}
-                ORDER BY ts DESC
-                LIMIT ?
-            ) ORDER BY ts ASC
-            """,
-            params,
-        ).fetchall()
+        with self._lock:
+            result = self._conn.execute(
+                f"""
+                SELECT ts, open, high, low, close, volume FROM (
+                    SELECT ts, open, high, low, close, volume FROM ohlcv
+                    WHERE {where}
+                    ORDER BY ts DESC
+                    LIMIT ?
+                ) ORDER BY ts ASC
+                """,
+                params,
+            ).fetchall()
         return [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in result]
 
     def latest_ts(self, exchange: str, symbol: str, timeframe: str) -> int | None:
-        row = self._conn.execute(
-            "SELECT MAX(ts) FROM ohlcv WHERE exchange = ? AND symbol = ? AND timeframe = ?",
-            [exchange.lower(), symbol.upper(), timeframe],
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT MAX(ts) FROM ohlcv WHERE exchange = ? AND symbol = ? AND timeframe = ?",
+                [exchange.lower(), symbol.upper(), timeframe],
+            ).fetchone()
         return int(row[0]) if row and row[0] is not None else None
 
     def row_count(self) -> int:
-        row = self._conn.execute("SELECT COUNT(*) FROM ohlcv").fetchone()
+        with self._lock:
+            row = self._conn.execute("SELECT COUNT(*) FROM ohlcv").fetchone()
         return int(row[0]) if row else 0
 
     def close(self) -> None:

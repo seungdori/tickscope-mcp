@@ -95,6 +95,7 @@ Any [ccxt](https://github.com/ccxt/ccxt)-supported exchange can be enabled via `
 | `detect_patterns` | Candlestick patterns (engulfing, hammer, stars, …) with bias |
 | `analyze_structure` | Market structure: swings, trend, BOS / CHoCH |
 | `find_support_resistance` | Clustered support/resistance zones from pivots |
+| `deep_analyze` | Multi-timeframe read: trend confluence + market-state context + historical signal performance, with a synthesized verdict |
 | `screen_market` | Scan many symbols by indicator/price filters |
 | `get_aggregated_price` | Volume-weighted price + cross-exchange spread (arbitrage) |
 | `get_funding_rate` | Perpetual funding rate |
@@ -118,6 +119,17 @@ Specs are `"name:p1,p2"` and also accept **Pine Script syntax** — `ta.rsi(14)`
 ### Structure recognition
 
 On top of numeric indicators, TickFeed describes *what the chart is doing*: `detect_patterns` names candlestick patterns (engulfing, hammer/hanging man, doji family, morning/evening star, three soldiers/crows, …) with their bias; `analyze_structure` returns swing highs/lows labeled HH/HL/LH/LL, the inferred trend, and Break-of-Structure / Change-of-Character events (SMC-style); `find_support_resistance` clusters swing pivots into support/resistance zones with touch counts. These give an agent the vocabulary to describe a chart the way a trader would.
+
+### Deep analysis
+
+`deep_analyze` answers a question about a symbol in one call, instead of making the agent chain a dozen tools. It returns:
+
+- **Multi-timeframe trend confluence** — the same symbol read across a 1d/4h/1h ladder, with whether the timeframes agree or conflict.
+- **Market-state context** — where price sits in its recent range (percentile), the trend state (`trending_up` / `trending_down` / `ranging`, from ADX + Kaufman efficiency ratio), and the volatility state (from ATR percentile), so a bare "RSI 30" reads against the conditions it showed up in.
+- **Historical signal performance** — for the current divergence, the forward-return distribution of every past *confirmed* occurrence on this symbol/timeframe (count, win rate, median). A strictly causal event study — no look-ahead, no repaint.
+- **A synthesized verdict** — bias, confidence, timeframe agreement, the execution-timeframe market state, and explicit caveats, all computed deterministically in Python so the call never hinges on the model eyeballing raw numbers.
+
+`compute_indicators` now carries the same market-state context inline (it's ~free), and signal history is memoized per closed bar, so warm reads stay fast. Clients that support MCP prompts expose this as a slash command — `/mcp__tickfeed__deep_analyze` (symbol + timeframe) — to trigger a full read on demand.
 
 ### Resources
 

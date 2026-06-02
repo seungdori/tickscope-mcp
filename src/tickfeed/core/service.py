@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import OrderedDict
 from typing import Any
 
 import pandas as pd
@@ -23,7 +24,7 @@ from ..utils import (
     normalize_symbol,
     now_iso,
 )
-from . import analysis, indicators_engine, structure
+from . import analysis, context, indicators_engine, signal_history, structure
 from .cache import MarketCache
 from .exchange_manager import ExchangeManager, ccxt_version
 from .ingestion import IngestionManager
@@ -78,15 +79,39 @@ class MarketDataService:
         self.ingestion = IngestionManager(
             self.exchanges, self.cache, max_watched=settings.max_watched_symbols
         )
+        # One REST concurrency gate per exchange (lazily created). Bounds the
+        # number of simultaneous in-flight REST calls so that offloading CPU /
+        # DuckDB work off the event loop never lets requests burst past an
+        # exchange's rate limit. Works alongside ccxt's enableRateLimit pacing.
+        self._rest_sems: dict[str, asyncio.Semaphore] = {}
+        # Memoized signal event-studies, keyed by the last candle ts so the work
+        # is reused for the whole bar and only recomputed once a new bar closes.
+        self._signal_perf_memo: OrderedDict[tuple[Any, ...], dict[str, Any]] = OrderedDict()
         self.started_at = time.time()
 
     # --- helpers --------------------------------------------------------
     def _exchange_id(self, exchange: str | None) -> str:
         return (exchange or self.settings.default_exchange).lower()
 
+    def _rest_sem(self, label: str) -> asyncio.Semaphore:
+        """Per-exchange REST concurrency gate (derived from the call label)."""
+        ex = label.rsplit(":", 1)[-1] if ":" in label else "_"
+        sem = self._rest_sems.get(ex)
+        if sem is None:
+            sem = asyncio.Semaphore(self.settings.rest_concurrency)
+            self._rest_sems[ex] = sem
+        return sem
+
     async def _rest(self, factory: Any, *, label: str) -> Any:
-        """Run a REST coroutine factory with rate-limit-aware retry (§9.2)."""
-        return await with_retry(factory, retries=self.settings.rest_retries, label=label)
+        """Run a REST coroutine factory with rate-limit-aware retry (§9.2).
+
+        Acquires the per-exchange REST gate first so concurrent multi-symbol
+        work cannot exceed ``rest_concurrency`` in-flight calls to one venue —
+        REST stays on the event loop (never a worker thread), so ccxt's
+        ``enableRateLimit`` pacing is always honoured.
+        """
+        async with self._rest_sem(label):
+            return await with_retry(factory, retries=self.settings.rest_retries, label=label)
 
     @staticmethod
     def _warmup_limit(limit: int, period: int) -> int:
@@ -254,22 +279,39 @@ class MarketDataService:
         """
         limit = max(1, min(limit, 1000))
         tf_ms = timeframe_to_ms(timeframe)
-
-        cached = self.store.query(exchange, symbol, timeframe, since_ms=since_ms, limit=limit)
-        latest_ts = self.store.latest_ts(exchange, symbol, timeframe)
         now_ms = int(time.time() * 1000)
-
-        # Cache is fresh enough if it has the requested count and the newest
-        # candle is within one timeframe + TTL of now.
         ttl_ms = self.settings.ohlcv_cache_ttl_s * 1000
+
+        # L1: serve a plain "last N closed candles" request straight from RAM,
+        # skipping DuckDB *and* the exchange while the series is within TTL.
+        # Closed candles are immutable, and the forming bar is re-overlaid from
+        # the websocket each time, so this stays correct — and saves a REST call.
+        if since_ms is None:
+            mem = self.cache.get_recent_ohlcv(exchange, symbol, timeframe)
+            if mem is not None:
+                mem_rows, fetched_ms = mem
+                if len(mem_rows) >= limit and (now_ms - fetched_ms) < ttl_ms:
+                    return self._finalize_rows(
+                        exchange, symbol, timeframe, mem_rows[-limit:], tf_ms, limit, hit=True
+                    )
+
+        # L2: DuckDB-backed cache, REST top-up on miss. DuckDB is synchronous,
+        # so every call runs on a worker thread — a cold lookup never blocks the
+        # event loop or the websocket ingestion that keeps the warm cache fresh.
+        cached = await asyncio.to_thread(
+            self.store.query, exchange, symbol, timeframe, since_ms=since_ms, limit=limit
+        )
+        latest_ts = await asyncio.to_thread(self.store.latest_ts, exchange, symbol, timeframe)
+
+        # Fresh enough if it has the requested count and the newest candle is
+        # within one timeframe + TTL of now.
         fresh = (
             len(cached) >= limit
             and latest_ts is not None
             and (now_ms - latest_ts) < (tf_ms + ttl_ms)
         )
-        cache_hit = fresh and since_ms is None
 
-        if cache_hit:
+        if fresh and since_ms is None:
             rows = cached[-limit:]
             hit = True
         else:
@@ -279,12 +321,32 @@ class MarketDataService:
                 label=f"fetch_ohlcv:{exchange}",
             )
             if raw:
-                self.store.upsert(exchange, symbol, timeframe, raw)
-            rows = self.store.query(exchange, symbol, timeframe, since_ms=since_ms, limit=limit)[
-                -limit:
-            ]
+                await asyncio.to_thread(self.store.upsert, exchange, symbol, timeframe, raw)
+            rows = (
+                await asyncio.to_thread(
+                    self.store.query, exchange, symbol, timeframe, since_ms=since_ms, limit=limit
+                )
+            )[-limit:]
             hit = False
 
+        # Refresh the L1 hot cache for the next call (plain recent request only).
+        if since_ms is None and rows:
+            self.cache.set_recent_ohlcv(exchange, symbol, timeframe, rows, now_ms)
+
+        return self._finalize_rows(exchange, symbol, timeframe, rows, tf_ms, limit, hit=hit)
+
+    def _finalize_rows(
+        self,
+        exchange: str,
+        symbol: str,
+        timeframe: str,
+        rows: list[list[float]],
+        tf_ms: int,
+        limit: int,
+        *,
+        hit: bool,
+    ) -> tuple[list[list[float]], dict[str, Any]]:
+        """Overlay the live (forming) candle and assemble the response meta."""
         rows, live_age = self._overlay_live_candle(exchange, symbol, timeframe, rows, tf_ms)
         # The overlay may append the forming candle; keep the response at limit.
         rows = rows[-limit:]
@@ -384,7 +446,7 @@ class MarketDataService:
         ex = self._exchange_id(exchange)
         sym = await self._normalize(ex, symbol)
         df = await self._ohlcv_dataframe(ex, sym, timeframe, max(limit, lookback + 10), with_ts=True)
-        out = structure.detect_candlestick_patterns(df, lookback=lookback)
+        out = await asyncio.to_thread(structure.detect_candlestick_patterns, df, lookback=lookback)
         return {"exchange": ex, "symbol": sym, "timeframe": timeframe, "as_of": now_iso(), **out}
 
     async def analyze_structure(
@@ -393,7 +455,7 @@ class MarketDataService:
         ex = self._exchange_id(exchange)
         sym = await self._normalize(ex, symbol)
         df = await self._ohlcv_dataframe(ex, sym, timeframe, max(limit, 60))
-        out = structure.market_structure(df, left=left, right=right)
+        out = await asyncio.to_thread(structure.market_structure, df, left=left, right=right)
         return {"exchange": ex, "symbol": sym, "timeframe": timeframe, "as_of": now_iso(), **out}
 
     async def find_support_resistance(
@@ -408,8 +470,12 @@ class MarketDataService:
         ex = self._exchange_id(exchange)
         sym = await self._normalize(ex, symbol)
         df = await self._ohlcv_dataframe(ex, sym, timeframe, max(limit, 60))
-        out = structure.support_resistance(
-            df, lookback=limit, tolerance_pct=tolerance_pct, max_levels=max_levels
+        out = await asyncio.to_thread(
+            structure.support_resistance,
+            df,
+            lookback=limit,
+            tolerance_pct=tolerance_pct,
+            max_levels=max_levels,
         )
         return {"exchange": ex, "symbol": sym, "timeframe": timeframe, "as_of": now_iso(), **out}
 
@@ -427,15 +493,19 @@ class MarketDataService:
         sym = await self._normalize(ex, symbol)
         fetch = self._warmup_limit(limit, indicators_engine.max_period(indicators))
         df = await self._ohlcv_dataframe(ex, sym, timeframe, fetch)
-        results, series = indicators_engine.compute(
-            df, indicators, include_series=include_series
+        results, series = await asyncio.to_thread(
+            indicators_engine.compute, df, indicators, include_series=include_series
         )
+        # ★2 statistical / market-state context — near-free, makes every value
+        # interpretable ("RSI 30 in a strong downtrend != RSI 30 in a range").
+        ctx = await asyncio.to_thread(context.statistical_context, df)
         return {
             "exchange": ex,
             "symbol": sym,
             "timeframe": timeframe,
             "as_of": now_iso(),
             "results": results,
+            "context": ctx,
             "series": series if include_series else None,
         }
 
@@ -455,7 +525,9 @@ class MarketDataService:
         # Warmup must cover the oscillator period plus several pivot windows.
         period = indicators_engine.max_period([oscillator]) + 2 * max(left, right)
         df = await self._ohlcv_dataframe(ex, sym, timeframe, self._warmup_limit(limit, period))
-        out = analysis.detect_divergence(df, oscillator, left=left, right=right)
+        out = await asyncio.to_thread(
+            analysis.detect_divergence, df, oscillator, left=left, right=right
+        )
         return {"exchange": ex, "symbol": sym, "timeframe": timeframe, "as_of": now_iso(), **out}
 
     async def evaluate_cross(
@@ -471,8 +543,146 @@ class MarketDataService:
         sym = await self._normalize(ex, symbol)
         period = indicators_engine.max_period([series_a, series_b])
         df = await self._ohlcv_dataframe(ex, sym, timeframe, self._warmup_limit(limit, period))
-        out = analysis.evaluate_cross(df, series_a, series_b)
+        out = await asyncio.to_thread(analysis.evaluate_cross, df, series_a, series_b)
         return {"exchange": ex, "symbol": sym, "timeframe": timeframe, "as_of": now_iso(), **out}
+
+    # --- deep multi-timeframe analysis (★1 confluence + ★2 context + ★3 stats) ---
+    DEFAULT_TF_LADDER = ("1d", "4h", "1h")
+
+    async def deep_analyze(
+        self,
+        exchange: str | None,
+        symbol: str,
+        *,
+        timeframes: list[str] | None = None,
+        oscillator: str = "rsi:14",
+        horizon: int = 10,
+        history: int = 800,
+    ) -> dict[str, Any]:
+        """Multi-timeframe read + statistical context + historical signal stats.
+
+        Heavier than the single-shot tools (several timeframes + an event study),
+        so it is meant for "is this setup worth caring about?" questions rather
+        than quick single-value lookups. Timeframes are fetched and computed
+        concurrently and off the event loop, so warm reads stay fast.
+        """
+        ex = self._exchange_id(exchange)
+        sym = await self._normalize(ex, symbol)
+        tfs = list(timeframes or self.DEFAULT_TF_LADDER) or list(self.DEFAULT_TF_LADDER)
+
+        async def per_tf(tf: str) -> tuple[str, dict[str, Any]]:
+            df = await self._ohlcv_dataframe(ex, sym, tf, 300)
+            return tf, await asyncio.to_thread(self._tf_snapshot, df, oscillator)
+
+        snaps = dict(await asyncio.gather(*(per_tf(tf) for tf in tfs)))
+
+        # Historical signal performance on the execution (lowest) timeframe,
+        # over a long window so the event study has enough occurrences.
+        exec_tf = tfs[-1]
+        perf = await self._signal_perf(ex, sym, exec_tf, oscillator, horizon, history)
+
+        return {
+            "exchange": ex,
+            "symbol": sym,
+            "as_of": now_iso(),
+            "oscillator": oscillator,
+            "timeframes": {tf: snaps[tf] for tf in tfs},
+            "signal_history": perf,
+            "verdict": self._synthesize(snaps, tfs, exec_tf, perf),
+            "disclaimer": DISCLAIMER,
+        }
+
+    @staticmethod
+    def _tf_snapshot(df: pd.DataFrame, oscillator: str) -> dict[str, Any]:
+        """Per-timeframe read (runs in a worker thread): trend, momentum, context."""
+        ms = structure.market_structure(df)
+        rsi_last = indicators_engine._last(indicators_engine.rsi(df["close"], 14))
+        div = analysis.detect_divergence(df, oscillator)
+        return {
+            "trend": ms["trend"],
+            "events": ms["events"],
+            "rsi": round(rsi_last, 1) if rsi_last is not None else None,
+            "context": context.statistical_context(df),
+            "divergences": div["divergences"],
+        }
+
+    async def _signal_perf(
+        self,
+        exchange: str,
+        symbol: str,
+        timeframe: str,
+        oscillator: str,
+        horizon: int,
+        history: int,
+    ) -> dict[str, Any]:
+        rows, _ = await self._ohlcv_rows(exchange, symbol, timeframe, history)
+        if not rows:
+            return {
+                "signal": f"divergence({oscillator})",
+                "bullish": {"count": 0},
+                "bearish": {"count": 0},
+            }
+        # Memoize per last-closed bar: same bar -> reuse; new bar -> recompute.
+        key = (exchange, symbol, timeframe, oscillator, horizon, int(rows[-1][0]), len(rows))
+        cached = self._signal_perf_memo.get(key)
+        if cached is not None:
+            self._signal_perf_memo.move_to_end(key)
+            return cached
+        df = pd.DataFrame(rows, columns=["ts", "open", "high", "low", "close", "volume"])
+        df = df[["open", "high", "low", "close", "volume"]].astype(float)
+        perf = await asyncio.to_thread(
+            signal_history.divergence_performance, df, oscillator, horizon=horizon
+        )
+        self._signal_perf_memo[key] = perf
+        self._signal_perf_memo.move_to_end(key)
+        while len(self._signal_perf_memo) > 128:
+            self._signal_perf_memo.popitem(last=False)
+        return perf
+
+    @staticmethod
+    def _synthesize(
+        snaps: dict[str, dict[str, Any]],
+        tfs: list[str],
+        exec_tf: str,
+        perf: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Deterministic, explainable verdict from multi-TF trend + state + stats.
+
+        The numeric reasoning is done here in Python (not left to the LLM eyeing
+        raw values), which is the main guard against agent misjudgement.
+        """
+        trends = [snaps[tf]["trend"] for tf in tfs]
+        up = trends.count("uptrend")
+        down = trends.count("downtrend")
+        bias = "bullish" if up > down else "bearish" if down > up else "neutral"
+        agreement = max(up, down)
+        score = agreement / len(tfs) if tfs else 0.0
+
+        market_state = snaps[exec_tf].get("context", {}).get("trend_state")
+        caveats: list[str] = []
+        if market_state == "ranging":
+            caveats.append(
+                "Execution timeframe is ranging — trend/momentum signals are less reliable here."
+            )
+            score *= 0.7
+        if up and down:
+            caveats.append("Timeframes disagree on trend; treat the directional bias cautiously.")
+
+        rel = perf.get(bias) if bias in ("bullish", "bearish") else None
+        if isinstance(rel, dict) and 0 < rel.get("count", 0) < 5:
+            caveats.append(
+                f"Signal-history sample is small (n={rel['count']}); the statistics are noisy."
+            )
+
+        confidence = "high" if score >= 0.8 else "medium" if score >= 0.5 else "low"
+        return {
+            "bias": bias,
+            "confidence": confidence,
+            "timeframe_agreement": f"{agreement}/{len(tfs)}",
+            "trend_by_timeframe": {tf: snaps[tf]["trend"] for tf in tfs},
+            "execution_market_state": market_state,
+            "caveats": caveats,
+        }
 
     # --- multi-exchange aggregation ------------------------------------
     async def get_aggregated_price(
@@ -605,7 +815,22 @@ class MarketDataService:
     ) -> dict[str, Any]:
         self._validate_filters(filters)
         ex = self._exchange_id(exchange)
-        targets = symbols or await self._top_symbols_by_volume(ex, quote, top_n)
+        needs_ticker = any("metric" in f for f in filters) or sort_by in self._TICKER_METRICS
+
+        # One bulk fetch_tickers() up front, reused both to pick the volume
+        # leaders and to satisfy every row's ticker metrics — instead of an N+1
+        # storm of one fetch_ticker per symbol, which would needlessly burn the
+        # rate limit. Empty when the venue lacks fetchTickers; rows then fall
+        # back to a per-symbol fetch only where one is actually needed.
+        tickers: dict[str, Any] = {}
+        if symbols:
+            targets = symbols
+            if needs_ticker:
+                tickers = await self._fetch_tickers_safe(ex)
+        else:
+            tickers = await self._fetch_tickers_safe(ex)
+            targets = await self._rank_by_volume(ex, tickers, quote, top_n)
+
         semaphore = asyncio.Semaphore(self.settings.screen_concurrency)
         matched: list[dict[str, Any]] = []
         errors: list[dict[str, Any]] = []
@@ -613,7 +838,7 @@ class MarketDataService:
         async def evaluate(sym: str) -> None:
             async with semaphore:
                 try:
-                    row = await self._screen_one(ex, sym, timeframe, filters, sort_by)
+                    row = await self._screen_one(ex, sym, timeframe, filters, sort_by, tickers)
                     if row is not None:
                         matched.append(row)
                 except TickFeedError as exc:
@@ -625,10 +850,25 @@ class MarketDataService:
         matched.sort(key=lambda r: r.get(sort_by, 0) or 0, reverse=True)
         return {"exchange": ex, "timeframe": timeframe, "matched": matched, "errors": errors}
 
-    async def _top_symbols_by_volume(self, exchange: str, quote: str, top_n: int) -> list[str]:
+    async def _fetch_tickers_safe(self, exchange: str) -> dict[str, Any]:
+        """One bulk ticker snapshot for the whole venue (a single REST call).
+
+        Returns ``{}`` when the exchange has no ``fetchTickers`` (or the call
+        fails), so callers transparently fall back to per-symbol tickers.
+        """
         inst = await self.exchanges.get(exchange)
+        if not (getattr(inst, "has", {}) or {}).get("fetchTickers"):
+            return {}
+        try:
+            return await self._rest(lambda: inst.fetch_tickers(), label=f"fetch_tickers:{exchange}")
+        except Exception:  # noqa: BLE001 - degrade to per-symbol tickers
+            return {}
+
+    async def _rank_by_volume(
+        self, exchange: str, tickers: dict[str, Any], quote: str, top_n: int
+    ) -> list[str]:
+        """Top ``top_n`` spot symbols for ``quote`` by 24h quote volume."""
         markets = await self.exchanges.load_markets(exchange)
-        tickers = await self._rest(lambda: inst.fetch_tickers(), label=f"fetch_tickers:{exchange}")
         candidates = [
             (sym, t.get("quoteVolume") or 0)
             for sym, t in tickers.items()
@@ -648,6 +888,7 @@ class MarketDataService:
         timeframe: str,
         filters: list[dict[str, Any]],
         sort_by: str | None = None,
+        tickers: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         indicator_specs = [f["indicator"] for f in filters if "indicator" in f]
         # Fetch the ticker when a filter needs it OR when sorting by a ticker
@@ -659,13 +900,19 @@ class MarketDataService:
         if indicator_specs:
             fetch = self._warmup_limit(200, indicators_engine.max_period(indicator_specs))
             df = await self._ohlcv_dataframe(exchange, symbol, timeframe, fetch)
-            results, _ = indicators_engine.compute(df, indicator_specs)
+            results, _ = await asyncio.to_thread(indicators_engine.compute, df, indicator_specs)
             indicator_values = results
 
         metrics: dict[str, Any] = {}
         if needs_ticker:
-            inst = await self.exchanges.get(exchange)
-            t = await self._rest(lambda: inst.fetch_ticker(symbol), label=f"fetch_ticker:{exchange}")
+            # Prefer the row's entry from the bulk snapshot; only hit REST for a
+            # symbol the snapshot did not cover (keeps screening to ~1 ticker call).
+            t = (tickers or {}).get(symbol)
+            if t is None:
+                inst = await self.exchanges.get(exchange)
+                t = await self._rest(
+                    lambda: inst.fetch_ticker(symbol), label=f"fetch_ticker:{exchange}"
+                )
             metrics = {
                 "change_24h_pct": t.get("percentage"),
                 "volume_24h": t.get("baseVolume"),

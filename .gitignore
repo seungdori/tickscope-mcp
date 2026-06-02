@@ -32,3 +32,6 @@ env/
 .DS_Store
 .idea/
 .vscode/
+
+# Internal design docs (kept locally, not shipped)
+TickFeed_MCP_구현명세.md

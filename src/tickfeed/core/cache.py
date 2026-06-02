@@ -7,9 +7,14 @@ in well under a second instead of issuing a cold REST request.
 from __future__ import annotations
 
 import time
-from collections import deque
+from collections import OrderedDict, deque
 from dataclasses import dataclass, field
 from typing import Any
+
+# Cap on distinct (exchange, symbol, timeframe) candle series kept hot in RAM.
+# Each entry is at most ~1000 rows; 256 series is a few MB and covers far more
+# symbols than the watch cap, while bounding memory for wide screens.
+_MAX_OHLCV_SERIES = 256
 
 
 def _now_ms() -> int:
@@ -66,6 +71,13 @@ class MarketCache:
         # Live (forming) candle per (exchange, symbol, timeframe), fed by
         # the ccxt.pro watch_ohlcv loop. Value is the latest [ts,o,h,l,c,v].
         self.live_candles: dict[tuple[str, str, str], CachedValue] = {}
+        # L1 hot cache of recently-fetched closed candles per
+        # (exchange, symbol, timeframe) -> (rows, fetched_ms). Lets repeated
+        # indicator/structure calls within the TTL skip both DuckDB and the
+        # exchange entirely. LRU-bounded by _MAX_OHLCV_SERIES.
+        self.recent_ohlcv: OrderedDict[tuple[str, str, str], tuple[list[list[float]], int]] = (
+            OrderedDict()
+        )
 
     @staticmethod
     def _key(exchange: str, symbol: str) -> tuple[str, str]:
@@ -105,3 +117,23 @@ class MarketCache:
         self, exchange: str, symbol: str, timeframe: str
     ) -> CachedValue | None:
         return self.live_candles.get((exchange.lower(), symbol.upper(), timeframe))
+
+    # recent closed candles (L1) ----------------------------------------
+    def get_recent_ohlcv(
+        self, exchange: str, symbol: str, timeframe: str
+    ) -> tuple[list[list[float]], int] | None:
+        """Return ``(rows, fetched_ms)`` for a hot candle series, or ``None``."""
+        key = (exchange.lower(), symbol.upper(), timeframe)
+        entry = self.recent_ohlcv.get(key)
+        if entry is not None:
+            self.recent_ohlcv.move_to_end(key)  # LRU touch
+        return entry
+
+    def set_recent_ohlcv(
+        self, exchange: str, symbol: str, timeframe: str, rows: list[list[float]], fetched_ms: int
+    ) -> None:
+        key = (exchange.lower(), symbol.upper(), timeframe)
+        self.recent_ohlcv[key] = (rows, fetched_ms)
+        self.recent_ohlcv.move_to_end(key)
+        while len(self.recent_ohlcv) > _MAX_OHLCV_SERIES:
+            self.recent_ohlcv.popitem(last=False)

@@ -81,6 +81,40 @@ async def test_screen_market_concurrency_and_errors(service):
     assert "BTC/USDT" not in matched_symbols
 
 
+async def test_screen_market_uses_bulk_tickers_not_n_plus_1(service, fake_exchange):
+    # A metric screen over N symbols must issue ONE bulk fetch_tickers, never
+    # one fetch_ticker per symbol (which would burn the exchange rate limit).
+    out = await service.screen_market(
+        "binance", ["BTC/USDT", "ETH/USDT"], "USDT", 30, "1h",
+        [{"metric": "change_24h_pct", "op": ">", "value": 5}], "volume_24h",
+    )
+    assert {m["symbol"] for m in out["matched"]} == {"ETH/USDT"}
+    assert fake_exchange.calls.get("fetch_tickers", 0) == 1
+    assert fake_exchange.calls.get("fetch_ticker", 0) == 0  # no per-symbol storm
+
+
+async def test_ohlcv_l1_cache_skips_store_on_repeat(service, fake_exchange):
+    # The in-memory L1 cache should serve a repeated recent-candles request
+    # without touching DuckDB (store.query) or the exchange again.
+    calls = {"query": 0}
+    original_query = service.store.query
+
+    def counting_query(*args, **kwargs):
+        calls["query"] += 1
+        return original_query(*args, **kwargs)
+
+    service.store.query = counting_query  # type: ignore[assignment]
+
+    await service.compute_indicators("binance", "BTC/USDT", "1h", 100, ["rsi:14"], False)
+    fetches_after_first = fake_exchange.calls.get("fetch_ohlcv", 0)
+    queries_after_first = calls["query"]
+
+    await service.compute_indicators("binance", "BTC/USDT", "1h", 100, ["rsi:14"], False)
+    # Second call is an L1 hit: no extra REST fetch and no extra DuckDB query.
+    assert fake_exchange.calls.get("fetch_ohlcv", 0) == fetches_after_first
+    assert calls["query"] == queries_after_first
+
+
 async def test_screen_market_invalid_op_raises():
     from tickfeed.core.service import MarketDataService
     from tickfeed.utils import TickFeedError

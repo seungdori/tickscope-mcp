@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-from . import analysis, indicators, market, meta, screen, watch
+from . import analysis, deep, indicators, market, meta, screen, watch
 
 
 def register_all(mcp: FastMCP) -> None:
@@ -15,3 +15,4 @@ def register_all(mcp: FastMCP) -> None:
     screen.register(mcp)
     watch.register(mcp)
     analysis.register(mcp)
+    deep.register(mcp)

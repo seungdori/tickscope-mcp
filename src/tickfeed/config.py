@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     rest_retries: int = 3
     # Bounded concurrency for multi-symbol work (screen_market, aggregation).
     screen_concurrency: int = 5
+    # Hard cap on simultaneous in-flight REST calls *per exchange*. ccxt's
+    # enableRateLimit already paces requests; this is defense-in-depth so that
+    # unblocking the event loop can never turn into a burst that trips an
+    # exchange's rate limit.
+    rest_concurrency: int = 8
 
     transport: str = "stdio"
     http_host: str = "127.0.0.1"

@@ -18,7 +18,7 @@
 
 </div>
 
-TickFeed는 모든 MCP 클라이언트(Claude Code, Cursor, Codex, Gemini CLI 등)에 **실시간·과거 암호화폐 시세 데이터를 무료로** 제공하는 셀프호스팅 [Model Context Protocol](https://modelcontextprotocol.io) 서버입니다. 백그라운드에서 거래소 WebSocket 연결을 항상 열어 두므로, 에이전트는 그 연결에서 **1초도 안 된 최신** 시세를 즉시 받아 옵니다. 같은 서버가 **기술 지표 73종**과 **차트 구조 인식**까지 제공하며, API 키도 필요 없습니다.
+TickFeed는 모든 MCP 클라이언트(Claude Code, Cursor, Codex, Gemini CLI 등)에 **실시간·과거 암호화폐 시세 데이터를 무료로** 제공하는 셀프호스팅 [Model Context Protocol](https://modelcontextprotocol.io) 서버입니다. 백그라운드에서 거래소 WebSocket 연결을 항상 열어 두므로, 에이전트는 그 연결에서 **생성된 지 1초도 안 된 최신** 시세를 즉시 받아 옵니다. 같은 서버가 **기술 지표 73종**과 **차트 구조 인식**까지 제공하며, API 키도 필요 없습니다.
 
 > ⚠️ 교육·연구용 도구입니다. 금융·투자·트레이딩 조언을 제공하지 않으며, 데이터의 정확성·적시성을 보증하지 않습니다.
 
@@ -94,6 +94,7 @@ Cursor, Codex, Gemini CLI도 각자의 MCP 설정 파일에서 동일한 `comman
 | `detect_patterns` | 캔들스틱 패턴 (engulfing, hammer, star 등) + bias |
 | `analyze_structure` | 마켓 스트럭처: 스윙, 추세, BOS / CHoCH |
 | `find_support_resistance` | pivot 군집 기반 지지/저항 존 |
+| `deep_analyze` | 멀티 타임프레임 종합 분석: 추세 합류 + 시장 상태 맥락 + 과거 신호 성과, 그리고 종합 판정 |
 | `screen_market` | 지표/가격 조건으로 멀티 심볼 스크리닝 |
 | `get_aggregated_price` | 거래량 가중가 + 거래소 간 스프레드 (차익) |
 | `get_funding_rate` | 무기한 선물 펀딩비 |
@@ -112,11 +113,22 @@ Cursor, Codex, Gemini CLI도 각자의 MCP 설정 파일에서 동일한 `comman
 - **추세:** `adx dmi aroon vortex`
 - **구조:** `heikinashi pivots`
 
-스펙은 `"name:p1,p2"` 형식이며 **Pine Script 표기** — `ta.rsi(14)`, `ta.ema(20)`, `ta.wt(10,21)`, `ta.sqz` — 도 받으므로 TradingView 사용자가 익숙한 표현을 그대로 붙여넣을 수 있습니다. 파생 신호로는 과매수/과매도 state, MACD/PPO/WaveTrend/QQE cross, 오실레이터 zero-line cross, Supertrend/PSAR direction & flip, squeeze on/off, DMI/Heikin-Ashi 추세, Ichimoku 구름 위치가 있습니다. 크립토/Pine 인기 지표(WaveTrend, TTM Squeeze, QQE, Connors RSI, Schaff Trend Cycle, VIDYA, T3)를 포함합니다. 새 지표 추가는 `REGISTRY`에 한 줄 선언입니다.
+스펙은 `"name:p1,p2"` 형식이며 **Pine Script 표기** — `ta.rsi(14)`, `ta.ema(20)`, `ta.wt(10,21)`, `ta.sqz` — 도 받으므로 TradingView 사용자가 익숙한 표현을 그대로 붙여넣을 수 있습니다. 파생 신호로는 과매수/과매도 상태, MACD/PPO/WaveTrend/QQE cross, 오실레이터 zero-line cross, Supertrend/PSAR direction & flip, squeeze on/off, DMI/Heikin-Ashi 추세, Ichimoku 구름 위치가 있습니다. 크립토/Pine 인기 지표(WaveTrend, TTM Squeeze, QQE, Connors RSI, Schaff Trend Cycle, VIDYA, T3)를 포함합니다. 새 지표는 `REGISTRY`에 한 줄만 선언하면 추가됩니다.
 
 ### 구조 인식
 
 TickFeed는 숫자 지표에 더해 *지금 차트에서 벌어지는 일*까지 설명합니다: `detect_patterns`는 캔들스틱 패턴(engulfing, hammer/hanging man, doji 계열, morning/evening star, three soldiers/crows 등)을 bias와 함께 명명하고, `analyze_structure`는 HH/HL/LH/LL로 라벨링된 스윙 고/저점, 추세, Break-of-Structure / Change-of-Character 이벤트(SMC 방식)를 반환하며, `find_support_resistance`는 스윙 pivot을 지지/저항 존으로 군집화하고 touch 수를 셉니다. 덕분에 에이전트도 트레이더처럼 차트를 말로 풀어 설명할 수 있습니다.
+
+### 심층 분석
+
+`deep_analyze`는 한 번의 호출로 한 심볼을 여러 타임프레임에 걸쳐 종합적으로 읽어 줍니다. 에이전트가 여러 도구를 직접 엮을 필요가 없습니다. 반환 항목은 다음과 같습니다:
+
+- **멀티 타임프레임 추세 합류** — 같은 심볼을 1d/4h/1h로 위에서 아래로 훑어, 각 타임프레임이 서로 맞물리는지 엇갈리는지 알려줍니다.
+- **시장 상태 맥락** — 가격이 최근 구간에서 어디쯤에 있는지(백분위), 추세 상태(`trending_up` / `trending_down` / `ranging`, ADX + Kaufman 효율비 기반), 변동성 상태(ATR 백분위). 덕분에 "RSI 30" 같은 값도 그 값이 나온 상황에 비춰 해석할 수 있습니다.
+- **과거 신호 성과** — 지금 잡힌 다이버전스에 대해, 같은 심볼/타임프레임에서 과거에 *확정된* 모든 발생의 이후 수익률 분포(횟수, 승률, 중앙값)를 냅니다. 미래 데이터를 끌어다 쓰거나 리페인트하지 않고, 과거 시점 기준으로만 측정합니다.
+- **종합 판정** — bias, 신뢰도, 타임프레임 일치도, 실행 타임프레임의 시장 상태, 그리고 명시적인 주의사항까지 Python에서 결정론적으로 계산하므로, 판단이 모델의 눈대중에 좌우되지 않습니다.
+
+가벼운 `compute_indicators`도 이제 같은 시장 상태 맥락을 함께 반환하며(비용은 거의 0), 신호 이력은 확정 봉 단위로 메모이즈되어 워밍된 조회는 그대로 빠릅니다. MCP 프롬프트를 지원하는 클라이언트에서는 슬래시 명령 `/mcp__tickfeed__deep_analyze`(심볼·타임프레임 인자)로도 노출되어, 사용자가 전체 분석을 직접 띄울 수 있습니다.
 
 ### 리소스
 

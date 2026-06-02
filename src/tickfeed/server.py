@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP
 
-from . import resources
+from . import prompts, resources
 from .config import get_settings
 from .runtime import get_service, shutdown_service
 from .tools import register_all
@@ -49,7 +49,9 @@ def build_server() -> FastMCP:
             "Use get_ticker for current prices, get_ohlcv for candles, "
             "compute_indicators for technical analysis, detect_divergence and "
             "detect_cross for chart signals, and screen_market to scan many "
-            "symbols. Responses include source/age_ms freshness. " + DISCLAIMER
+            "symbols. For a thorough, multi-timeframe judgement (trend confluence, "
+            "market-state context and historical signal performance) use deep_analyze. "
+            "Responses include source/age_ms freshness. " + DISCLAIMER
         ),
         lifespan=_make_lifespan(teardown_on_exit=settings.transport != "http"),
         host=settings.http_host,
@@ -57,4 +59,5 @@ def build_server() -> FastMCP:
     )
     register_all(mcp)
     resources.register(mcp)
+    prompts.register(mcp)
     return mcp
